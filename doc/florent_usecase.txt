@@ -1,0 +1,66 @@
+=================
+Florent's Usecase
+=================
+
+:Revision: $Id$
+
+.. sectnum::    :depth: 4
+.. contents::   :depth: 4
+
+
+Calendar use case extracted from Florent's email. This is mostly
+materialized in usecase.txt, which is doctested.
+
+1. Florent invites Martijn and Bob to a meeting in Room 1. There
+   are 3 calendars involved, CalRoom1, CalFlorent and CalMartijn.
+   Bob doesn't have a calendar but we can contact him by email.
+
+2. In the first step, Florent creates a "Tentative" event for that
+   date in CalFlorent with attendees Room1, Martijn and Bob in the
+   "Needs-Action" state. This (conceptually) sends a Request to
+   the other attendees.
+
+3. An event in state "Needs-Action" and organizer "Florent" is
+   created in CalMartijn and CalRoom1.
+
+4. An email with some information is sent to Bob.
+
+5. CalRoom1 is configured to automatically accept an event where
+   it's free, so it changes the event to "Accepted". Because the
+   event has an organizer (which is a kind of attendee), a reply
+   is sent to CalFlorent saying ACCEPTED.
+
+6. This changes the participant state of Room1 in CalFlorent's
+   event to "Accepted"
+
+7. This in turn re-sends the event to previous attendees with
+   updated information about Room1's participation status. Maybe
+   we want to delay this kind of thing, not that this could mean
+   re-sending an email to Bob which may be too much.
+
+8. Later when Martijn goes to his calendar he sees a warning about
+   a new requested event in the UI. He reads the event and accepts
+   it, this changes its state to Accepted and like above this
+   updates CalFlorent, which in turns propagates the status to
+   Room1.
+
+9. Later Bob reads his email, and accepts the event. Depending on
+   the solution chosen, he could reply to the email and the MTA
+   could forward it to Zope, or he could click an URL in the mail.
+   In the end the calendar is informed that Bob accepted the
+   event, so this updates its participant status in the event of
+   CalFlorent, and this is propagated to other attendees.
+
+10. Later Florent reads his calendar and is notified somehow
+    (we'll have to find how) that some attendees accepted, and
+    finally turns the event into "Confirmed". This is propagated
+    to other calendars, and probably a mail is sent to Bob.
+
+
+.. Emacs
+.. Local Variables:
+.. mode: rst
+.. End:
+.. Vim
+.. vim: set filetype=rst:
+

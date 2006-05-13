@@ -1,0 +1,144 @@
+==============
+All day events
+==============
+
+:Revision: $Id$
+
+.. sectnum::    :depth: 4
+.. contents::   :depth: 4
+
+
+
+First let's set up an attendee::
+
+  >>> from calcore import cal
+  >>> m = cal.StorageManager()
+  >>> storage = cal.MemoryStorage('storage')
+  >>> m.setStorage(storage)
+  >>> s = cal.SimpleAttendeeSource(m)
+  >>> martijn = s.createIndividual('martijn', 'Martijn')
+
+Now let's create an all day event, without duration specified::
+
+  >>> from datetime import datetime, timedelta
+  >>> event = martijn.createEvent(
+  ...    dtstart=datetime(2005, 4, 10),
+  ...    duration=None, 
+  ...    status='TENTATIVE',
+  ...    title="All day extravaganza",
+  ...    allday=True)
+ 
+This event will show up when we ask for events in the period::
+
+  >>> events = martijn.getEvents((datetime(2005, 4, 1), datetime(2005, 4, 12)))
+  >>> len(events)
+  1
+  >>> events = martijn.getEvents((datetime(2005, 4, 10), datetime(2005, 4, 11)))
+  >>> len(events)
+  1
+  >>> events[0].title
+  'All day extravaganza'
+
+This event has a duration of a day::
+
+  >>> events[0].duration
+  datetime.timedelta(1)
+
+It will not show up when the period is the day before or after::
+
+  >>> events = martijn.getEvents((datetime(2005, 4, 1), datetime(2005, 4, 10)))
+  >>> len(events)
+  0
+  >>> events = martijn.getEvents((datetime(2005, 4, 11), datetime(2005, 4, 12)))
+  >>> len(events)
+  0
+
+We can also create an event with a duration of a day ourselves::
+
+  >>> event2 = martijn.createEvent(
+  ...    dtstart=datetime(2005, 5, 1),
+  ...    duration=timedelta(days=1),
+  ...    status='TENTATIVE',
+  ...    title="Entire day",
+  ...    allday=True)
+  
+  >>> events = martijn.getEvents((datetime(2005, 5, 1), datetime(2005, 5, 2)))
+  >>> len(events)
+  1
+  >>> events[0].title
+  'Entire day'
+  >>> events[0].duration
+  datetime.timedelta(1)
+
+We'll also find occurrences for these events::
+
+  >>> oc = martijn.getOccurrences(
+  ...    (datetime(2005, 4, 1), datetime(2005, 6, 1)))
+  >>> len(oc)
+  2
+  >>> oc.sort(lambda x, y: cmp(x.dtstart, y.dtstart))
+  >>> oc[0].original.title
+  'All day extravaganza'
+  >>> oc[1].original.title
+  'Entire day'
+
+Let's create a 3 day event::
+
+  >>> threeday = martijn.createEvent(
+  ...    dtstart=datetime(2006, 10, 1),
+  ...    duration=timedelta(days=3),
+  ...    status='TENTATIVE',
+  ...    title="New",
+  ...    allday=True)
+
+We'll find its duration is indeed 3 days::
+
+  >>> threeday.duration
+  datetime.timedelta(3)
+
+Let's search for this event::
+
+  >>> events = martijn.getEvents(
+  ...     (datetime(2006, 9, 1), datetime(2006, 11, 1)))
+  >>> len(events)
+  1
+  >>> events[0].title
+  'New'
+
+Let's create a recurrent, all day event::
+
+  >>> from calcore import recurrent
+  >>> event3 = martijn.createEvent(
+  ...    dtstart=datetime(2005, 6, 5),
+  ...    duration=timedelta(days=1),
+  ...    status='TENTATIVE',
+  ...    title="Sunday",
+  ...    allday=True,
+  ...    recurrence=recurrent.WeeklyRecurrenceRule())
+  
+We're going to find all sundays in june::
+
+  >>> oc = martijn.getOccurrences(
+  ...    (datetime(2005, 6, 1), datetime(2005, 7, 1)))
+  >>> len(oc)
+  4
+  >>> oc.sort(lambda x, y: cmp(x.dtstart, y.dtstart))
+  >>> oc[0].dtstart
+  datetime.datetime(2005, 6, 5, 0, 0)
+  >>> oc[0].original.duration
+  datetime.timedelta(1)
+  >>> oc[1].dtstart
+  datetime.datetime(2005, 6, 12, 0, 0)
+  >>> oc[2].dtstart
+  datetime.datetime(2005, 6, 19, 0, 0)
+  >>> oc[3].dtstart
+  datetime.datetime(2005, 6, 26, 0, 0)
+
+
+.. Emacs
+.. Local Variables:
+.. mode: rst
+.. End:
+.. Vim
+.. vim: set filetype=rst:
+

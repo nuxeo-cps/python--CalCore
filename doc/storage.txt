@@ -1,0 +1,93 @@
+=========================
+Multiple storage backends
+=========================
+
+:Revision: $Id$
+
+.. sectnum::    :depth: 4
+.. contents::   :depth: 4
+
+
+This scenario takes place in the context of multiple storage
+backends.
+
+First, we'll create the storage manager::
+
+  >>> from calcore import cal
+  >>> m = cal.StorageManager()
+
+Our storage manager needs to have actual storages to work with.
+We'll create two, each with a unique name::
+
+  >>> storage1 = cal.MemoryStorage('storage1')
+  >>> storage2 = cal.MemoryStorage('storage2')
+
+They need to be added to the manager::
+
+  >>> m.addStorage(storage1)
+  >>> m.addStorage(storage2)
+
+The default storage new events will be created in is the first.
+
+Now let's create some people::
+
+  >>> s = cal.SimpleAttendeeSource(m)
+  >>> martijn = s.createIndividual('martijn', 'Martijn')
+  >>> lennart = s.createIndividual('lennart', 'Lennart')
+
+Martijn creates an event::
+
+   >>> from datetime import datetime, timedelta
+   >>> event = martijn.createEvent(
+   ...   datetime(2005, 4, 10, 16, 00),
+   ...   timedelta(minutes=60),
+   ...   title="Martijn's Event")
+
+This should show up in storage1, so let's take a peek::
+
+   >>> april = (datetime(2005, 4, 1), datetime(2005, 5, 1))
+   >>> events = storage1.getEvents(april, None)
+   >>> len(events)
+   1
+   >>> events[0].title
+   "Martijn's Event"
+
+It won't be in storage2::
+   
+   >>> storage2.getEvents(april, None)
+   []
+
+Now let's change the preferred storage of the storage manager::
+
+  >>> m.setNewEventStorage('storage2')
+
+And let's add another event::
+
+  >>> event2 = lennart.createEvent(
+  ...   datetime(2005, 4, 11, 16, 00),
+  ...   timedelta(minutes=60),
+  ...   title="Lennart's Event")
+ 
+It should show up in storage2::
+
+   >>> events = storage2.getEvents(april, None)
+   >>> len(events)
+   1
+   >>> events[0].title
+   "Lennart's Event"
+
+And it won't be in storage1, which will still have a single
+event::
+  
+   >>> events = storage1.getEvents(april, None)
+   >>> len(events)
+   1
+
+
+.. Emacs
+.. Local Variables:
+.. mode: rst
+.. End:
+.. Vim
+.. vim: set filetype=rst:
+

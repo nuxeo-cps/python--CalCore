@@ -1,0 +1,339 @@
+====================
+Setting Up a Meeting
+====================
+
+:Revision: $Id$
+
+.. sectnum::    :depth: 4
+.. contents::   :depth: 4
+
+
+In this document we'll try to set up a meeting between various
+extremely busy people.
+
+First, we're going to set up a calendar storage and create some
+people::
+
+  >>> from calcore import cal
+  >>> m = cal.StorageManager()
+  >>> m.setStorage(cal.MemoryStorage('storage'))
+  >>> s = cal.SimpleAttendeeSource(m)
+  >>> martijn = s.createIndividual('martijn', 'Martijn')
+  >>> lennart = s.createIndividual('lennart', 'Lennart')
+  >>> florent = s.createIndividual('florent', 'Florent')
+  >>> eric = s.createIndividual('eric', 'Eric')
+
+
+Blocked periods
+===============
+
+Now let's make them busy in the period march 9 till march 11::
+ 
+  >>> from datetime import datetime, timedelta, time
+  >>> a = martijn.createEvent(
+  ...     dtstart=datetime(2005, 3, 10, 0, 0),
+  ...     duration=timedelta(days=1),
+  ...     status='TENTATIVE',
+  ...     title="Martijn's day off")
+  >>> b = florent.createEvent(
+  ...     dtstart=datetime(2005, 3, 9, 15, 00),
+  ...     duration=timedelta(minutes=120),
+  ...     title='Some meeting')
+  >>> c = eric.createEvent(
+  ...     dtstart=datetime(2005, 3, 9, 10, 00),
+  ...     duration=timedelta(minutes=90),
+  ...     title='Another meeting')
+  >>> d = lennart.createEvent(
+  ...     dtstart=datetime(2005, 3, 11, 11, 00),
+  ...     duration=timedelta(minutes=60),
+  ...     title='Yet another meeting')
+  >>> e = martijn.createEvent(
+  ...     dtstart=datetime(2005, 3, 9, 15, 30),
+  ...     duration=timedelta(minutes=30),
+  ...     title='Another overlapping meeting')
+  >>> c.invite([lennart, florent])
+  >>> d.invite([florent])
+
+The time is blocked off during five periods::
+
+  >>> people = [martijn, lennart, florent, eric]
+  >>> period = (datetime(2005, 3, 9), datetime(2005, 3, 12))
+  >>> time_period = (time(9, 0), time(17, 0))
+  >>> periods = m.getBlockedPeriods(people, period, time_period)
+  >>> len(periods)
+  5
+
+On day 9, 0:00-9:00, blocked off start of the day::
+
+  >>> periods[0]
+  (datetime.datetime(2005, 3, 9, 0, 0), datetime.datetime(2005, 3, 9, 9, 0))
+
+On day 9, 10:00-11:30::
+
+  >>> periods[1]
+  (datetime.datetime(2005, 3, 9, 10, 0), datetime.datetime(2005, 3, 9, 11, 30))
+
+From day 9 15:00 until the start of day 11::
+ 
+  >>> periods[2]
+  (datetime.datetime(2005, 3, 9, 15, 0), datetime.datetime(2005, 3, 11, 9, 0))
+
+On day 11, from 11:00 until 12:00::
+
+  >>> periods[3]
+  (datetime.datetime(2005, 3, 11, 11, 0), datetime.datetime(2005, 3, 11, 12, 0))
+
+Finally, on day 11, from 17:00 until the end of the day::
+
+  >>> periods[4]
+  (datetime.datetime(2005, 3, 11, 17, 0), datetime.datetime(2005, 3, 12, 0, 0))
+
+Free periods
+============
+
+Now let's ask for all the time periods free on march 9 till 11,
+between 9:00 till 17:00::
+
+  >>> periods = m.getFreePeriods(people, period, time_period)
+  >>> len(periods)
+  4
+
+On day 9, 9:00-10:00::
+
+  >>> periods[0]
+  (datetime.datetime(2005, 3, 9, 9, 0), datetime.datetime(2005, 3, 9, 10, 0))
+
+On day 9, 11:30-15:00::
+
+  >>> periods[1]
+  (datetime.datetime(2005, 3, 9, 11, 30), datetime.datetime(2005, 3, 9, 15, 0))
+
+On day 11, from 9:00 until 11:00::
+
+  >>> periods[2]
+  (datetime.datetime(2005, 3, 11, 9, 0), datetime.datetime(2005, 3, 11, 11, 0))
+
+And again on day 11, from 12:00 until 17:00::
+
+  >>> periods[3]
+  (datetime.datetime(2005, 3, 11, 12, 0), datetime.datetime(2005, 3, 11, 17, 0))
+
+Now let's throw away these events again::
+
+  >>> m.deleteEvent(a)
+  >>> m.deleteEvent(b)
+  >>> m.deleteEvent(c)
+  >>> m.deleteEvent(d)
+  >>> m.deleteEvent(e)
+  >>> m.getEvents((datetime(2005, 3, 9), datetime(2005, 3, 12)))
+  []
+
+Let's try another scenario. Let's schedule some events for day 9
+in march::
+
+  >>> a = martijn.createEvent(
+  ...    dtstart=datetime(2005, 3, 9, 9, 0), duration=timedelta(minutes=60),
+  ...    title="A")
+  >>> b = martijn.createEvent(
+  ...    dtstart=datetime(2005, 3, 9, 10, 15), duration=timedelta(minutes=60),
+  ...    title="B")
+  >>> c = martijn.createEvent(
+  ...    dtstart=datetime(2005, 3, 9, 12, 0), duration=timedelta(minutes=90),
+  ...    title="C")
+  >>> d = martijn.createEvent(
+  ...    dtstart=datetime(2005, 3, 9, 16, 0), duration=timedelta(minutes=120),
+  ...    title="D")
+
+We're going to see what free time this means for that day, from 9:00
+till 17:00::
+
+  >>> periods = m.getFreePeriods(
+  ...   [martijn],
+  ...   (datetime(2005, 3, 9), datetime(2005, 3, 10)),
+  ...   (time(9, 0), time(17, 0)))
+  >>> len(periods)
+  3
+  >>> periods[0]
+  (datetime.datetime(2005, 3, 9, 10, 0), datetime.datetime(2005, 3, 9, 10, 15))
+  >>> periods[1]
+  (datetime.datetime(2005, 3, 9, 11, 15), datetime.datetime(2005, 3, 9, 12, 0))
+  >>> periods[2]
+  (datetime.datetime(2005, 3, 9, 13, 30), datetime.datetime(2005, 3, 9, 16, 0))
+
+Now we'll select only the times that are longer than 30 minutes::
+
+  >>> periods = m.getFreePeriods(
+  ...   [martijn],
+  ...   (datetime(2005, 3, 9), datetime(2005, 3, 10)),
+  ...   (time(9, 0), time(17, 0)),
+  ...   timedelta(minutes=30))
+  >>> len(periods)
+  2
+  >>> periods[0]
+  (datetime.datetime(2005, 3, 9, 11, 15), datetime.datetime(2005, 3, 9, 12, 0))
+  >>> periods[1]
+  (datetime.datetime(2005, 3, 9, 13, 30), datetime.datetime(2005, 3, 9, 16, 0))
+
+Now let's look for the free periods longer than 60 minutes::
+
+  >>> periods = m.getFreePeriods(
+  ...   [martijn],
+  ...   (datetime(2005, 3, 9), datetime(2005, 3, 10)),
+  ...   (time(9, 0), time(17, 0)),
+  ...   timedelta(minutes=60))
+  >>> len(periods)
+  1
+  >>> periods[0]
+  (datetime.datetime(2005, 3, 9, 13, 30), datetime.datetime(2005, 3, 9, 16, 0))
+
+Let's look for the free periods longer than 3 hours; we expect to get nothing::
+
+  >>> periods = m.getFreePeriods(
+  ...   [martijn],
+  ...   (datetime(2005, 3, 9), datetime(2005, 3, 10)),
+  ...   (time(9, 0), time(17, 0)),
+  ...   timedelta(minutes=180))
+  >>> len(periods)
+  0
+
+Recurrence
+==========
+
+Let's check whether this works with recurrent events. Here's
+recurrent event for one participant::
+
+  >>> from calcore import recurrent
+  >>> a = martijn.createEvent(
+  ...    dtstart=datetime(2005, 6, 9, 11, 0), duration=timedelta(minutes=60),
+  ...    title="A",
+  ...    recurrence=recurrent.DailyRecurrenceRule())
+
+Now let's get free time over day 9 and 10. We should get free time
+for everything but 11:00 - 12:00 on both days::
+
+  >>> periods = m.getFreePeriods(
+  ...   [martijn],
+  ...   (datetime(2005, 6, 9), datetime(2005, 6, 11)),
+  ...   (time(9, 0), time(17, 0)))
+  >>> len(periods)
+  4
+  >>> periods[0]
+  (datetime.datetime(2005, 6, 9, 9, 0), datetime.datetime(2005, 6, 9, 11, 0))
+  >>> periods[1]
+  (datetime.datetime(2005, 6, 9, 12, 0), datetime.datetime(2005, 6, 9, 17, 0))
+  >>> periods[2]
+  (datetime.datetime(2005, 6, 10, 9, 0), datetime.datetime(2005, 6, 10, 11, 0))
+  >>> periods[3]
+  (datetime.datetime(2005, 6, 10, 12, 0), datetime.datetime(2005, 6, 10, 17, 0))
+ 
+Let's throw away the recurrent event again::
+
+  >>> m.deleteEvent(a)
+
+
+All-day events
+==============
+
+We're going to create a two events, one of which is all day::
+
+  >>> from calcore import recurrent
+  >>> a = martijn.createEvent(
+  ...    dtstart=datetime(2005, 7, 9, 11, 0), duration=timedelta(minutes=60),
+  ...    title="A")
+  >>> b = martijn.createEvent(
+  ...    dtstart=datetime(2005, 7, 11), duration=timedelta(days=1),
+  ...    title="B", allday=True)
+
+Now let's get free time over day 9 - 12::
+
+  >>> periods = m.getFreePeriods(
+  ...   [martijn],
+  ...   (datetime(2005, 7, 9), datetime(2005, 7, 13)),
+  ...   (time(9, 0), time(17, 0)))
+  >>> len(periods)
+  4
+  >>> periods[0]
+  (datetime.datetime(2005, 7, 9, 9, 0), datetime.datetime(2005, 7, 9, 11, 0))
+  >>> periods[1]
+  (datetime.datetime(2005, 7, 9, 12, 0), datetime.datetime(2005, 7, 9, 17, 0))
+  >>> periods[2]
+  (datetime.datetime(2005, 7, 10, 9, 0), datetime.datetime(2005, 7, 10, 17, 0))
+  >>> periods[3]
+  (datetime.datetime(2005, 7, 12, 9, 0), datetime.datetime(2005, 7, 12, 17, 0))
+
+
+Multi-day events
+================
+
+We're going to create a multi-day spanning event::
+
+  >>> from calcore import recurrent
+  >>> a = martijn.createEvent(
+  ...    dtstart=datetime(2005, 8, 9, 14, 0), duration=timedelta(hours=23),
+  ...    title="A")
+
+Now let's get free time over day 9 - 11::
+
+  >>> periods = m.getFreePeriods(
+  ...   [martijn],
+  ...   (datetime(2005, 8, 9), datetime(2005, 8, 12)),
+  ...   (time(9, 0), time(17, 0)))
+  >>> len(periods)
+  3
+  >>> periods[0]
+  (datetime.datetime(2005, 8, 9, 9, 0), datetime.datetime(2005, 8, 9, 14, 0))
+  >>> periods[1]
+  (datetime.datetime(2005, 8, 10, 13, 0), datetime.datetime(2005, 8, 10, 17, 0))
+  >>> periods[2]
+  (datetime.datetime(2005, 8, 11, 9, 0), datetime.datetime(2005, 8, 11, 17, 0))
+
+Let's make an event that spans 3 days::
+
+  >>> from calcore import recurrent
+  >>> a = martijn.createEvent(
+  ...    dtstart=datetime(2005, 9, 9, 14, 0), duration=timedelta(hours=47),
+  ...    title="A")
+
+Now let's get free time over day 9 - 11::
+
+  >>> periods = m.getFreePeriods(
+  ...   [martijn],
+  ...   (datetime(2005, 9, 9), datetime(2005, 9, 12)),
+  ...   (time(9, 0), time(17, 0)))
+  >>> len(periods)
+  2
+  >>> periods[0]
+  (datetime.datetime(2005, 9, 9, 9, 0), datetime.datetime(2005, 9, 9, 14, 0))
+  >>> periods[1]
+  (datetime.datetime(2005, 9, 11, 13, 0), datetime.datetime(2005, 9, 11, 17, 0))
+
+
+Transparent events
+==================
+
+Let's create a transparent event::
+
+  >>> a = martijn.createEvent(
+  ...    dtstart=datetime(2006, 1, 1, 14, 0), duration=timedelta(hours=4),
+  ...    title="A",
+  ...    transparent=True)
+ 
+It won't block a period for Martijn::
+
+  >>> periods = m.getFreePeriods(
+  ...   [martijn],
+  ...   (datetime(2006, 1, 1), datetime(2006, 1, 2)),
+  ...   (time(9, 0), time(17, 0)))
+  >>> len(periods)
+  1
+  >>> periods[0]
+  (datetime.datetime(2006, 1, 1, 9, 0), datetime.datetime(2006, 1, 1, 17, 0))
+
+
+.. Emacs
+.. Local Variables:
+.. mode: rst
+.. End:
+.. Vim
+.. vim: set filetype=rst:
+

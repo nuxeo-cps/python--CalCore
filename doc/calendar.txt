@@ -1,0 +1,122 @@
+========
+Calendar
+========
+
+:Revision: $Id$
+
+.. sectnum::    :depth: 4
+.. contents::   :depth: 4
+
+
+In this document we'll go through the calendar object API.
+
+Let's set up a storage first::
+
+  >>> from calcore import cal
+  >>> m = cal.StorageManager()
+  >>> m.setStorage(cal.MemoryStorage('storage'))
+
+Let's make a few attendees::
+
+  >>> s = cal.SimpleAttendeeSource(m)
+  >>> martijn = s.createIndividual('martijn', 'Martijn')
+  >>> lennart = s.createIndividual('lennart', 'Lennart')
+
+Martijn organizes an event::
+
+  >>> from datetime import datetime, timedelta
+  >>> event = martijn.createEvent(
+  ...    dtstart=datetime(2005, 2, 23, 10, 00),
+  ...    duration=timedelta(minutes=60), 
+  ...    title='Event A')
+
+Now we'll make a calendar for Martijn::
+
+  >>> cal_martijn = cal.Calendar(m, s)
+  >>> cal_martijn.addAttendee(martijn)
+  
+We expect to see the event in the calendar for Martijn::
+
+  >>> february = datetime(2005, 2, 1), datetime(2005, 3, 1)
+  >>> events = cal_martijn.getEvents(february)
+  >>> len(events)
+  1
+  >>> events[0].title
+  'Event A'
+
+You can also ask for all the events on a particular day::
+
+  >>> events = cal_martijn.getEventsInDay(datetime(2005, 2, 23))
+  >>> len(events)
+  1
+  >>> events[0].title
+  'Event A'
+
+Now Martijn invites Lennart::
+
+  >>> event.invite([lennart])
+
+Lennart should see this invitation show up in his calendar::
+
+  >>> cal_lennart = cal.Calendar(m, s)
+  >>> cal_lennart.addAttendee(lennart)
+  >>> events = cal_lennart.getEvents(february)
+  >>> len(events)
+  1
+  >>> events[0].title
+  'Event A'
+
+Now we'll create a combined calendar for Martijn and Lennart::
+
+  >>> cal_combined = cal.Calendar(m, s)
+  >>> cal_combined.addAttendee(lennart)
+  >>> cal_combined.addAttendee(martijn)
+
+And some individual events for Lennart and Martijn::
+
+  >>> event_b = lennart.createEvent(
+  ...    dtstart=datetime(2005, 2, 24, 10, 00),
+  ...    duration=timedelta(minutes=60),
+  ...    title='Event B')
+  >>> event_c = martijn.createEvent(
+  ...    dtstart=datetime(2005, 2, 25, 10, 00),
+  ...    duration=timedelta(minutes=60),
+  ...    title='Event C')
+
+We don't expect these to show up in each other's calendars::
+
+  >>> events = cal_martijn.getEvents(february)
+  >>> len(events)
+  2
+  >>> events.sort() # sort by start datetime
+  >>> events[0].title
+  'Event A'
+  >>> events[1].title
+  'Event C'
+  >>> events = cal_lennart.getEvents(february)
+  >>> len(events)
+  2
+  >>> events.sort()
+  >>> events[0].title
+  'Event A'
+  >>> events[1].title
+  'Event B'
+
+We do expect all three events to show up on the combined
+calendar::
+
+  >>> events = cal_combined.getEvents(february)
+  >>> len(events)
+  3
+  >>> events.sort()
+  >>> [e.title for e in events]
+  ['Event A', 'Event B', 'Event C']
+
+
+.. Emacs
+.. Local Variables:
+.. mode: rst
+.. End:
+.. Vim
+.. vim: set filetype=rst:
+

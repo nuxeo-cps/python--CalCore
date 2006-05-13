@@ -1,0 +1,217 @@
+=====================
+Calendar Architecture
+=====================
+
+:Revision: $Id$
+
+.. sectnum::    :depth: 4
+.. contents::   :depth: 4
+
+
+Attendee
+========
+
+An attendee is someone or something that is involved in an *event*
+(or more broadly, *calendar entity*). An attendee, for example,
+can be:
+
+- a person invited to an event
+
+- a person participating in an event
+
+- a room booked for an event
+
+A single attendee can be involved in multiple events. Normally
+these events do not overlap in time, but this depends on the way
+the attendee is involved.
+
+Note: 'attendee' may be the wrong word for this, as now we call
+objects 'attendees' even before they participate in any event in
+any way whatsoever. The IAttendee interface provides a way to
+start participating in events however, or create events that
+someone is the organizer of.
+
+
+Type
+----
+
+There are several types of attendees, such as Person (for example,
+Martijn), Group (for example, the CPSSharedCalendar developers),
+(physical) Resource (for example, a projector), or Room (for
+example, a meeting room at Nuxeo).
+
+Right now, little distinction is made between these and these are
+all attendee objects.
+
+
+Participation Status
+--------------------
+
+The attendee has a certain Participation status in the event, such
+as NEEDS-ACTION, ACCEPTED, DECLINED, TENTATIVELY_ACCEPTED, and
+DELEGATED.
+
+
+Participation Role
+------------------
+
+An attendee could be required to participate in an event, or be an
+optional participant, or the chair of the event. CalCore has
+support for this, though this information is not yet exposed to
+the user interface in CalZope.
+
+
+Event
+=====
+
+An Event has a start date-time and a duration, or alternatively
+represented, a start date-time and an end date-time.
+
+Events can also be recurring. Recurrences are represented as
+'occurrences'. When asking for occurrences in a period, all
+non-recurrent events and all occurrences from a recurring events
+will be returned as occurrences. An occurrence is a very simple
+object which has a dstart, a duration, and a link to the original
+event. There is only a single occurrence ever for a non-recurrent
+event, but for recurring events multiple occurrences typically
+exist.
+
+An event can have attendees associated with it. If an event is
+created through the attendee object, this attendee will be
+considered to be the event's organizer.
+
+An event also knows which storage it is coming from, to make sure
+writes go to the right storage (in case of a multi-storage setup).
+
+Events have several attributes, some of which can be edited. The
+event will return back to the storage to save the event.
+
+Events can also be read-only. This means event attributes cannot
+be changed, no new attendees can be registered for an event, and
+the event cannot be deleted.
+
+
+Calendar 
+=========
+
+A calendar is composed for one or more attendees. It shows a
+time-line (daily, weekly, monthly, etc) with any events that fall
+within this time-line.
+
+The only information managed by the calendar itself is the set of
+users/attendees it is displaying events for, and possibly some
+security configuration. Through the storage it can however access
+information on events and attendees for a particular date-time
+range.
+
+Events for a date-time range and set of attendees are retrieved by
+asking the storage.
+
+
+Storage
+=======
+
+Event and attendee information is stored in a storage; a storage
+only stores events, and attendees on those events are identified
+using a unique identifier. 
+
+A storage could be the ZODB, a relational database, or a specific
+calendaring backend such as Kolab or Hula, or a simple iCalendar
+file. Right now the only implementation exists for ZODB, and it
+CalCore needs some modifications before it can be used for other
+storages. The main modification would involve notifying the
+storage whenever an event object is modified; with the ZODB
+storage this happens automatically, but other storages will need
+more explicit notifications.
+
+We do not have a read-only storage concept yet, but read-only
+would be useful as it greatly simplifies writing a storage and
+thus can help establishe interoperability quickly. iCalendar
+files, perhaps exposed under a URL, are examples of something we
+could write a read-only storage for.
+
+It is possible to ask the storage for all events for a particular
+set of attendees in a date-time range; the search criteria can also
+be further specified. Right now for the ZODB storage this is not
+optimized at all, but another storage backend could optimize this
+by indexing things appropriately.
+
+
+Storage manager
+---------------
+
+The storage manager is the normal interface to interoperate with
+the storages. It is quite similar to a storage, but is a bit
+higher level. It used to have facilities to combine multiple
+storages into one, but for now we've simplified this again.
+
+
+Multiple storage thinking
+=========================
+
+Most of this is theoretical. No implementation exists yet.
+
+
+Read-only storages
+------------------
+
+If all storages are read-only, the resulting composite storage
+will be read-only as well.
+
+If some or all storages involved are read-write, then one of the
+read-write storages must be designated the primary storage. New
+events will be stored in it. Events can only be edited or deleted
+if they are accessed through a read-write storage. Such operations
+need to go to the storage the event is coming from. This means an
+event needs to be aware of its storage.
+
+
+Complexities concerning multiple storages
+-----------------------------------------
+
+There are a number of complexities concerning multiple storages
+that are in use simultaneously in a site.
+
+Imagine a scenario where an attendee with already information
+about it stored in storage X is invited to an event stored in
+storage Y. In order to do this, attendees must be identifiable
+across storages. This can be done by having the attendees (or
+storages) keep a mapping from storage_id to attendee_id. This way
+attendee X can have identifier x1 in storage A, and x2 in storage
+B.
+
+Another complexity concerning multiple storage backends is that
+one single storage may not have all the information anymore.
+Imagine for instance an attendee being invited for an event. This
+is fine for CPSSharedCalendar, as the information on the
+invitation will be retrieved from another storage. It may not be
+fine for the storage however, if it is used simultaneously by
+other applications. They will have no way of knowing an attendee
+is actually booked for an event.
+
+If other applications are using the storage directly without going
+through CPSSharedCalendar, the state of the storage may be changed
+without CPSSharedCalendar receiving a notification. This may be an
+issue if calendar information is indexed inside CPSSharedCalendar,
+for instance in a Zope catalog.
+
+
+A note on Zope integration
+==========================
+
+ZODB level integration is done by sub-classing the various base
+objects, such as CalendarBase, EventBase, AttendeeBase and
+StorageBase objects and mixing in permission (and any other Zope
+mixins, such as SimpleItem, where needed).
+
+A storage is exposed to the application as a tool/utility, as part
+of portal_calendar.
+
+
+.. Emacs
+.. Local Variables:
+.. mode: rst
+.. End:
+.. Vim
+.. vim: set filetype=rst:
+

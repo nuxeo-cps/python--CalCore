@@ -1,0 +1,28 @@
+Packaging CalCore
+=================
+There are two ways of packaging CalCore; make_pkg and setuptools.
+
+Nuxeo make_pkg
+--------------
+This is the primary packaging operation. In most cases you want to run this
+before any other type of packaging. Nuxeo make_pkg will increase the version
+number, make a tag in the svn for the new version, make CHANGES.txt, 
+HISTORY.txt and VERSION.txt files, create a tgz package and update the CHANGES,
+HISTORY and VERSION files accordingly.
+
+The result is a file, CalCore-x.x.x.tgz that includes the CalCore product.
+This can be installed either with distutils or as a Zope 2 Product, although
+the installation as a Zope product will be the only supported from versions
+after 2.0.1, as 2.0.1 and later has eggs support.
+
+Usage: make_pkg
+
+
+setuptools
+----------
+With version 2.0.1 and later, CalCore has eggs. Eggs are a way of distributing
+python products as single files, with an install process that keeps track of
+and installs requirements. This is the main way of distributing calcore for non
+Zope2 use from version 2.0.1.
+
+Usage: python setup.py bdist_egg

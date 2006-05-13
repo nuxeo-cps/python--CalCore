@@ -1,0 +1,171 @@
+================
+Calendar Usecase
+================
+
+:Revision: $Id$
+
+.. sectnum::    :depth: 4
+.. contents::   :depth: 4
+
+
+Introduction
+============
+
+This document describes a usecase for CalCore.
+
+
+Usecase
+=======
+
+We're going to follow a scenario where a user creates a calendar
+event, invites several people for it and tries to book a room for
+it. Next, the room booking succeeds and some people accept the
+invitation.
+
+All event information is accessed through a storage manager::
+
+  >>> from calcore import cal
+  >>> m = cal.StorageManager()
+
+Our storage manager needs to have an actual storage to work
+with. We'll create one and will add it to the storage manager::
+
+  >>> storage = cal.MemoryStorage('storage')
+  >>> m.setStorage(storage)
+
+We also need to create some people. How (potential) attendees are
+retrieved depends on the particular application. We'll use the
+SimpleAttendeeSource here::
+
+  >>> s = cal.SimpleAttendeeSource(m)
+
+First we need to fill it with some people are attendees. They need a
+unique identifier, and we'll also give them a name as the second
+argument::
+  
+  >>> martijn = s.createIndividual('martijn', 'Martijn')
+  >>> florent = s.createIndividual('florent', 'Florent')
+  >>> bob = s.createIndividual('bob', 'Bob')
+
+There's also a room attendee, which has a policy to always accept
+invitations if it's possible, i.e. there is no other event defined yet
+in that timeframe::
+
+  >>> room1 = s.createRoom('room1', 'Room 1', 
+  ...     on_invite=cal.acceptIfPossible)
+
+Now Florent will create a tentative event for a meeting on april 10,
+2005, at 4 pm, lasting an hour::
+
+  >>> from datetime import datetime, timedelta
+  >>> meeting = florent.createEvent(
+  ...    dtstart=datetime(2005, 4, 10, 16, 00),
+  ...    duration=timedelta(minutes=60), 
+  ...    status='TENTATIVE',
+  ...    title="Florent's Meeting")
+
+When Florent now checks his events for april, he'll see the meeting::
+
+  >>> april = (datetime(2005, 4, 1), datetime(2005, 5, 1))
+  >>> events = florent.getEvents(april)
+  >>> len(events)
+  1
+  >>> events[0] == meeting
+  True
+  >>> events[0].title
+  "Florent's Meeting"
+
+Since he's the organizer, he has automatically accepted the event::
+
+  >>> events[0].getParticipationStatus(florent)
+  'ACCEPTED'
+
+Martijn, Bob and Room 1 are still not invited::
+
+  >>> martijn.getEvents(april)
+  []
+  >>> bob.getEvents(april)
+  []
+  >>> room1.getEvents(april)
+  []
+
+Now Florent invites Martijn and Bob, and also wants to book room1::
+
+  >>> meeting.invite([room1, martijn, bob])
+
+All these attendees will now see the event too::
+
+  >>> result = []
+  >>> for attendee in [martijn, bob, room1]:
+  ...    events = attendee.getEvents(april)
+  ...    result.append(events[0] == meeting)
+  >>> result
+  [True, True, True]
+
+The status for Martijn and Bob will be 'NEEDS-ACTION'::
+
+  >>> [meeting.getParticipationStatus(attendee) for attendee in 
+  ...  [martijn, bob]]
+  ['NEEDS-ACTION', 'NEEDS-ACTION']
+
+Room 1 has been configured to automatically accept invitations if there
+is not another other booking for that time yet::
+
+  >>> meeting.getParticipationStatus(room1)
+  'ACCEPTED'
+
+Martijn will now see that there action items::
+
+  >>> events = martijn.getEvents(april, 
+  ...  cal.SearchCriteria(participation_status='NEEDS-ACTION'))
+  >>> len(events)
+  1
+ 
+He checks out the event::
+
+  >>> events[0].title
+  "Florent's Meeting"
+
+and accepts it::
+
+  Fetch the real event
+  >>> event = events[0]
+  >>> event.setParticipationStatus(martijn, 'ACCEPTED')
+  >>> event.getParticipationStatus(martijn)
+  'ACCEPTED'
+
+There are no more action items for Martijn::
+
+  >>> martijn.getEvents(april, 
+  ...   cal.SearchCriteria(participation_status='NEEDS-ACTION'))
+  []
+
+Florent can try to reinvite Martijn, but Martijn will remain accepted::
+
+  >>> meeting.invite([martijn])
+  >>> meeting.getParticipationStatus(martijn)
+  'ACCEPTED'
+
+Florent can get a list of all events he is the organizer of::
+
+  >>> events = florent.getOrganizedEvents()
+  >>> len(events)
+  1
+  >>> events[0].title
+  "Florent's Meeting"
+
+Florent decides in the end it was all a mistake, and the event is removed::
+
+  >>> m.deleteEvent(events[0])
+  >>> events = florent.getOrganizedEvents()
+  >>> len(events)
+  0
+
+
+.. Emacs
+.. Local Variables:
+.. mode: rst
+.. End:
+.. Vim
+.. vim: set filetype=rst:
+

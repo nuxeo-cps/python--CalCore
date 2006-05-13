@@ -1,0 +1,114 @@
+================
+Event categories
+================
+
+:Revision: $Id$
+
+.. sectnum::    :depth: 4
+.. contents::   :depth: 4
+
+
+Storage::
+
+  >>> from calcore import cal
+  >>> m = cal.StorageManager()
+  >>> m.setStorage(cal.MemoryStorage('storage'))
+
+Making some attendees::
+
+  >>> s = cal.SimpleAttendeeSource(m)
+  >>> martijn = s.createIndividual('martijn', 'Martijn')
+  >>> lennart = s.createIndividual('lennart', 'Lennart')
+
+Martijn creates an event::
+
+  >>> from datetime import datetime, timedelta
+  >>> event = martijn.createEvent(
+  ...   dtstart=datetime(2005, 2, 10, 14, 00),
+  ...   duration=timedelta(minutes=60),
+  ...   title='An Event')
+  
+Events can be in categories::
+
+  >>> from sets import Set
+  >>> event.categories = Set(['HOLIDAY'])
+  >>> event.categories
+  Set(['HOLIDAY'])
+  >>> event.inCategory('HOLIDAY')
+  True
+  >>> event.categories = event.categories.union(Set(['APPOINTMENT']))
+  >>> l = list(event.categories)
+  >>> l.sort()
+  >>> l
+  ['APPOINTMENT', 'HOLIDAY']
+  >>> event.categories = event.categories - Set(['HOLIDAY'])
+  >>> event.inCategory('HOLIDAY')
+  False
+  >>> event.categories
+  Set(['APPOINTMENT'])
+
+
+You can search events by categories. First, let's add a few more
+events in some categories::
+
+  >>> second = martijn.createEvent(
+  ...   dtstart=datetime(2005, 2, 10, 15, 00),
+  ...   duration=timedelta(minutes=60),
+  ...   title='Second Event',
+  ...   categories=Set(['HOLIDAY']))
+  >>> third = martijn.createEvent(
+  ...   dtstart=datetime(2005, 2, 10, 16, 00),
+  ...   duration=timedelta(minutes=60),
+  ...   title='Third Event',
+  ...   categories=Set(['APPOINTMENT']))
+  >>> fourth = martijn.createEvent(
+  ...   dtstart=datetime(2005, 2, 10, 17, 00),
+  ...   duration=timedelta(minutes=60),
+  ...   title='Fourth Event',
+  ...   categories=Set(['HOLIDAY', 'APPOINTMENT']))
+  >>> fifth = martijn.createEvent(
+  ...   dtstart=datetime(2005, 2, 10, 18, 00),
+  ...   duration=timedelta(minutes=60),
+  ...   title='Fifth Event')
+ 
+Now we're going to look for events that fit in categories::
+
+  >>> def displayEvents(events):
+  ...    events.sort()
+  ...    return [e.title for e in events]
+
+  >>> february = (datetime(2005, 2, 1), datetime(2005, 3, 1))
+  >>> events = martijn.getEvents(february, 
+  ...   cal.SearchCriteria(categories=['HOLIDAY']))
+  >>> displayEvents(events)
+  ['Second Event', 'Fourth Event']
+  >>> events = martijn.getEvents(february,
+  ...   cal.SearchCriteria(categories=['APPOINTMENT']))
+  >>> displayEvents(events)
+  ['An Event', 'Third Event', 'Fourth Event']
+  >>> events = martijn.getEvents(february,
+  ...   cal.SearchCriteria(categories=['APPOINTMENT', 'HOLIDAY']))
+  >>> displayEvents(events)
+  ['An Event', 'Second Event', 'Third Event', 'Fourth Event']
+
+If we don't supply any search criteria, we'll get all events in
+range::
+
+  >>> events = martijn.getEvents(february)
+  >>> displayEvents(events)
+  ['An Event', 'Second Event', 'Third Event', 'Fourth Event', 'Fifth Event']
+
+We can reach the same event by using blank search criteria::
+
+  >>> events = martijn.getEvents(february, cal.SearchCriteria())
+  >>> displayEvents(events)
+  ['An Event', 'Second Event', 'Third Event', 'Fourth Event', 'Fifth Event']
+
+
+.. Emacs
+.. Local Variables:
+.. mode: rst
+.. End:
+.. Vim
+.. vim: set filetype=rst:
+

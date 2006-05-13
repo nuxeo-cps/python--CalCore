@@ -1,0 +1,91 @@
+================
+Recurrent Events
+================
+
+:Revision: $Id$
+
+.. sectnum::    :depth: 4
+.. contents::   :depth: 4
+
+
+Storage::
+
+  >>> from calcore import cal
+  >>> m = cal.StorageManager()
+  >>> m.setStorage(cal.MemoryStorage('storage'))
+
+Making some attendees::
+
+  >>> s = cal.SimpleAttendeeSource(m)
+  >>> martijn = s.createIndividual('martijn', 'Martijn')
+  >>> lennart = s.createIndividual('lennart', 'Lennart')
+
+Creating a normal event::
+
+  >>> from datetime import datetime, date, timedelta
+  >>> event_a = martijn.createEvent(
+  ...   dtstart=datetime(2005, 3, 2, 16, 00), 
+  ...   duration=timedelta(minutes=60),
+  ...   title='An event')  
+
+Now creating a recurrent event, daily::
+
+  >>> from calcore import recurrent
+  >>> rule = recurrent.DailyRecurrenceRule(until=date(2005, 3, 31))
+  >>> event_r = martijn.createEvent(
+  ...   dtstart=datetime(2005, 3, 1, 15, 00),
+  ...   duration=timedelta(minutes=60),
+  ...   title='Recurrent event',
+  ...   recurrence=rule)
+  >>> march = (datetime(2005, 3, 1), datetime(2005, 4, 1))
+
+First, we'll take all events for March, not letting the recurrence
+rule activate. We just expect two events::
+
+  >>> events = martijn.getEvents(march)
+  >>> len(events)
+  2
+
+Now we grab all occurrences of an event for March. We expect 32; one
+for our non-recurrent event, and 31 more for each day for the daily
+recurrent event::
+
+  >>> occurrences = martijn.getOccurrences(march)
+  >>> len(occurrences)
+  32
+
+We expect an occurrence each day::
+
+  >>> result = []
+  >>> for i in range(1, 32):
+  ...    day = (datetime(2005, 3, i), datetime(2005, 3, i) + timedelta(days=1))
+  ...    day_occurrences = martijn.getOccurrences(day)
+  ...    result.append(len(day_occurrences))
+  >>> result
+  [1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+
+Let's try a weekly recurring event for April::
+
+  >>> april = (datetime(2005, 4, 1), datetime(2005, 5, 1))
+  >>> rule = recurrent.WeeklyRecurrenceRule(until=date(2005, 5, 1))
+  >>> event_r = martijn.createEvent(
+  ...   dtstart=datetime(2005, 4, 3, 15, 00),
+  ...   duration=timedelta(minutes=30),
+  ...   title='Recurrent event (2)',
+  ...   recurrence=rule)
+  >>> result = []
+  >>> for i in range(1, 31):
+  ...    day = (datetime(2005, 4, i), datetime(2005, 4, i) + timedelta(days=1))
+  ...    day_occurrences = martijn.getOccurrences(day)
+  ...    result.append(len(day_occurrences))
+  >>> result
+  [0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+
+
+.. Emacs
+.. Local Variables:
+.. mode: rst
+.. End:
+.. Vim
+.. vim: set filetype=rst:
+

@@ -1,0 +1,118 @@
+========
+Attendee
+========
+
+:Revision: $Id$
+
+.. sectnum::    :depth: 4
+.. contents::   :depth: 4
+
+
+This document will describe some manipulations possible for attendees
+that participate in events.
+
+First, let's create an event storage::
+
+  >>> from calcore import cal
+  >>> m = cal.StorageManager()
+  >>> m.setStorage(cal.MemoryStorage('storage'))
+
+Now let's create some attendees::
+
+  >>> s = cal.SimpleAttendeeSource(m)
+  >>> martijn = s.createIndividual('martijn', 'Martijn')
+  >>> lennart = s.createIndividual('lennart', 'Lennart')
+
+Martijn creates an event::
+
+  >>> from datetime import datetime, timedelta
+  >>> event = martijn.createEvent(
+  ...   dtstart=datetime(2005, 2, 10, 14, 00),
+  ...   duration=timedelta(minutes=60),
+  ...   title='An event')
+
+Martijn initially is a REQ-PARTICIPANT::
+
+  >>> event.getParticipationRole(martijn)
+  'REQ-PARTICIPANT'
+
+He's in the list of attendees::
+
+  >>> event.getAttendeeIds()
+  ['martijn']
+
+He's a REQ-PARTICIPANT, so he's in that list too::
+
+  >>> event.getAttendeeIds(participation_role='REQ-PARTICIPANT')
+  ['martijn']
+
+He's also ACCEPTED, as he's the organizer::
+
+  >>> event.getAttendeeIds(participation_status='ACCEPTED')
+  ['martijn']
+
+Lennart isn't participating at all yet::
+
+  >>> repr(event.getParticipationRole(lennart))
+  'None'
+
+Martijn now is declared the chair of this event::
+
+  >>> event.setParticipationRole(martijn, 'CHAIR')
+  >>> event.getParticipationRole(martijn)
+  'CHAIR'
+  >>> event.getAttendeeIds(participation_role='REQ-PARTICIPANT')
+  []
+  >>> event.getAttendeeIds(participation_role='CHAIR')
+  ['martijn']
+
+Lennart is invited::
+
+  >>> event.invite([lennart])
+  >>> event.getParticipationRole(lennart)
+  'REQ-PARTICIPANT'
+  >>> attendee_ids = event.getAttendeeIds()
+  >>> attendee_ids.sort()
+  >>> attendee_ids
+  ['lennart', 'martijn']
+  >>> event.getAttendeeIds(participation_role='REQ-PARTICIPANT')
+  ['lennart']
+
+We'll remove Lennart again by setting his participation status to
+None::
+  
+  >>> event.setParticipationStatus(lennart, None)
+  >>> event.hasAttendee(lennart)
+  False
+  >>> repr(event.getParticipationStatus(lennart))
+  'None'
+  >>> repr(event.getParticipationRole(lennart))
+  'None'
+  >>> event.getAttendeeIds()
+  ['martijn']
+
+Regression tests:
+
+- XXX - should be in test_cal
+
+- cal.AttendeeBase objects should implement interfaces.IAttendee::
+
+        >>> from zope.interface.verify import verifyObject
+        >>> from calcore import interfaces
+        >>> dino = cal.AttendeeBase('a', 'b', 'c', 'd')
+        >>> verifyObject(interfaces.IAttendee, dino)
+        True
+
+- as should cal.Attendee objects::
+
+        >>> verifyObject(interfaces.IAttendee, martijn)
+        True
+
+
+.. Emacs
+.. Local Variables:
+.. mode: rst
+.. End:
+.. Vim
+.. vim: set filetype=rst:
+
