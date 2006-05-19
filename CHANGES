@@ -3,7 +3,7 @@ Requires:
 -
 New features:
 ~~~~~~~~~~~~~
-- Extended the package info and added egg support in setup.py.
+-
 Bug fixes:
 ~~~~~~~~~~
 -

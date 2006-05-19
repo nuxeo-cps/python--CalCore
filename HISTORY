@@ -1,4 +1,20 @@
 *******************************************
+** CalCore V2.0.2 [R1 build 2006/05/19-13:27 by fermigier]
+** SVN URL: https://svn.nuxeo.org/pub/Python/CalCore/trunk Revision: 45826
+Requires:
+~~~~~~~~~
+-
+New features:
+~~~~~~~~~~~~~
+- Extended the package info and added egg support in setup.py.
+Bug fixes:
+~~~~~~~~~~
+-
+New internal features:
+~~~~~~~~~~~~~~~~~~~~~~
+-
+
+*******************************************
 ** CalCore V2.0.1 [R1 build 2006/03/09-15:11 by lregebro]
 ** SVN URL: http://svn.nuxeo.org/pub/CalCore/trunk Revision: 34207
 Requires:
