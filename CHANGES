@@ -6,7 +6,8 @@ New features:
 -
 Bug fixes:
 ~~~~~~~~~~
--
+- #1708: no more 'NONE' attachement on import + export the document attribute
+  as ATTACH value (in ical)
 New internal features:
 ~~~~~~~~~~~~~~~~~~~~~~
 -

@@ -48,7 +48,7 @@ class EventSpecification:
     attendees is a list of tuples, (attendee, role, status)
     """
     implements(IEventSpecification)
-    
+
     def __init__(self, dtstart, duration,
                  title='',
                  description='',
@@ -99,29 +99,29 @@ class EventSpecification:
             for (attendee, role, status) in self.attendees:
                 o.setParticipationRole(attendee, role)
                 o._setParticipationStatus(attendee, status)
-                
-                
+
+
 class StorageManagerBase:
-    
+
     implements(IStorageManager)
 
     def __init__(self):
         self._storage = None
-          
+
     # MANIPULATORS
 
     def setStorage(self, storage):
         self._storage = storage
-        
+
     def createEvent(self, unique_id=None, **kw):
         return self._storage.createEvent(unique_id, EventSpecification(**kw))
 
     def createEventFromSpecification(self, unique_id, spec):
         return self._storage.createEvent(unique_id, spec)
-    
+
     def deleteEvent(self, event):
         self._storage.deleteEvent(event)
-        
+
     # ACCESSORS
 
     def getEvent(self, event_id):
@@ -133,7 +133,7 @@ class StorageManagerBase:
             return True
         except KeyError:
             return False
-        
+
     def getEvents(self, period, search_criteria=None):
         return self._storage.getEvents(period, search_criteria)
 
@@ -143,7 +143,7 @@ class StorageManagerBase:
     def getOccurrencesSegmented(self, period, search_criteria=None):
         return segmentOccurrences(period,
                                   self.getOccurrences(period, search_criteria))
-    
+
     def getBlockedPeriods(self, attendees, period, time_period):
         # XXX need to check for events that an attendee is interested
         # in, but not actively participating
@@ -154,11 +154,11 @@ class StorageManagerBase:
             search_criteria = SearchCriteria(attendees=[attendee])
             for occ in self.getOccurrencesSegmented(period, search_criteria):
                 # transparent or canceled events don't count
-                if (occ.original.transparent or 
+                if (occ.original.transparent or
                     occ.original.status == 'CANCELED'):
                     continue
                 # And neither does events you are not going to:
-                if (occ.original.getParticipationStatus(attendee) in 
+                if (occ.original.getParticipationStatus(attendee) in
                     ['DECLINED', 'DELEGATED']):
                     continue
                 dtstart = occ.dtstart
@@ -190,7 +190,7 @@ class StorageManagerBase:
             d = next_day
         return util.removeOverlaps(blocked_periods)
 
-    
+
     def getFreePeriods(self, attendees, period, time_period,
                      minimal_duration=None):
         blocked_periods = self.getBlockedPeriods(
@@ -203,7 +203,7 @@ class StorageManagerBase:
             begins = combine(begins.date(), time_begins)
         if ends > combine(ends.date(), time_ends):
             ends = combine(ends.date(), time_ends)
-        
+
         last_block_begins = begins
         for dtstart, dtend in blocked_periods:
             if dtstart.time() >= time_begins and last_block_begins != dtstart:
@@ -216,26 +216,26 @@ class StorageManagerBase:
                 (ends - last_block_begins) >= minimal_duration):
                 free_periods.append((last_block_begins, ends))
         return free_periods
-    
+
 class StorageManager(StorageManagerBase):
     pass
-    
+
 class StorageBase:
     """Minimalistic implementation of a storage.
     """
     implements(IStorage)
-    
+
     def __init__(self, storage_id, hostname=None):
         self._storage_id = storage_id
         self._events = self._initEvents()
         self._hostname = hostname or socket.getfqdn()
-        
+
     def _initEvents(self):
         raise NotImplementedError
 
     def _eventFactory(self, event_id, spec):
         raise NotImplementedError
-                                  
+
     # MANIPULATORS
     def createEvent(self, unique_id, spec):
         if unique_id is None:
@@ -245,10 +245,10 @@ class StorageBase:
         event = self._eventFactory(unique_id, spec)
         self._events[unique_id] = event
         return event
-    
+
     def deleteEvent(self, event):
         del self._events[event.unique_id]
-    
+
     # ACCESSORS
 
     def getStorageId(self):
@@ -256,7 +256,7 @@ class StorageBase:
 
     def getEvent(self, event_id):
         return self._events[event_id]
-            
+
     def getEvents(self, period, search_criteria):
         events = self._getMatchingEvents(search_criteria)
         return [event for event in events if inPeriod(event, period)]
@@ -290,14 +290,14 @@ class MemoryStorage(StorageBase):
 
 class SearchCriteria:
     implements(ISearchCriteria)
-    
+
     def __init__(self,
                  attendees=None,
                  participation_status=None,
                  participation_role=None,
                  categories=None,
                  organizer=None):
-        if (attendees is not None and 
+        if (attendees is not None and
            not isinstance(attendees,(ListType, TupleType))):
             attendees = [attendees]
         self.attendees = attendees
@@ -308,7 +308,7 @@ class SearchCriteria:
 
     def clone(self, attendees=None, participation_status=None,
               participation_role=None, categories=None, organizer=None):
-        if (attendees is not None and 
+        if (attendees is not None and
            not isinstance(attendees,(ListType, TupleType))):
             attendees = [attendees]
         attendees = self.attendees or attendees
@@ -336,24 +336,24 @@ class SearchCriteria:
 
         if self.attendees is None:
             return True
-        
+
         for attendee in self.attendees:
             if not event.hasAttendee(attendee):
                 continue
-            
+
             if (self.participation_status is not None and
                 self.participation_status !=
                 event.getParticipationStatus(attendee)):
                 continue
-                        
+
             if (self.participation_role is not None and
                 self.participation_role !=
                 event.getParticipationRole(attendee)):
                 continue
-        
+
             #This attendee matched
             return True
-        
+
         # No attendee matched
         return False
 
@@ -361,20 +361,20 @@ class SearchCriteria:
 class NullSearchCriteria(SearchCriteria):
     def __init__(self):
         SearchCriteria.__init__(self)
-    
+
 class EventBase:
     implements(IInvitableCalendarEvent)
-    
+
     def __init__(self, unique_id, spec):
         self.unique_id = unique_id
         self._participation_state = self._initParticipationState()
         self._participation_role = self._initParticipationRole()
 
         spec.setOnObject(self)
-        
+
         if self.allday:
             self.alldayAdjust()
-            
+
     def _initParticipationState(self):
         raise NotImplementedError
 
@@ -389,7 +389,7 @@ class EventBase:
                 self.setParticipationStatus(attendee, 'NEEDS-ACTION')
                 self.setParticipationRole(attendee, 'REQ-PARTICIPANT')
                 attendee.on_invite(self)
-        
+
     def setParticipationStatus(self, attendee, status):
         assert status in [None, 'NEEDS-ACTION', 'ACCEPTED', 'DECLINED',
                           'TENTATIVE', 'DELEGATED']
@@ -425,15 +425,15 @@ class EventBase:
             if rest != timedelta(0) or days == 0:
                 days += 1
             self.duration = timedelta(days=days)
-        
+
     # ACCESSORS
-    
+
     def getOrganizerId(self):
         return self._organizer_id
-        
+
     def inCategory(self, category):
         return category in self.categories
-    
+
     def getAttendeeIds(self,
                        participation_status=None, participation_role=None):
         result = []
@@ -457,10 +457,10 @@ class EventBase:
     def getParticipationRole(self, attendee):
         return self._participation_role.get(
             attendee.getAttendeeId())
-    
+
     def __hash__(self):
         return hash(self.unique_id)
-    
+
     def __cmp__(self, other):
         # sort first on start datetime, then on public id
         if not isinstance(other, EventBase):
@@ -468,7 +468,7 @@ class EventBase:
         return cmp(
             (self.dtstart, self.unique_id),
             (other.dtstart, self.unique_id))
-    
+
     def expand(self, period):
         """Returns ICalendarOccurrences for this event in period."""
         # if we don't have a recurrence, we only generate a single occurrence
@@ -490,11 +490,11 @@ class EventBase:
 
 class Timed:
     implements(ITimed)
-    
+
     def __init__(self, dtstart, duration):
         self.dtstart = dtstart
         self.duration = duration
-        
+
 class Event(EventBase):
     def _initParticipationState(self):
         return {}
@@ -512,26 +512,26 @@ class Occurrence:
 
 class AttendeeBase:
     implements(IAttendee)
-    
+
     def __init__(self, attendee_id, name, attendee_type, on_invite):
         self._attendee_id = attendee_id
         self._name = name
         self._attendee_type = attendee_type
         self._on_invite = on_invite
-    
+
     # MANIPULATORS
 
     def createEvent(self, **kw):
         kw['organizer'] = self
         return self._getStorageManager().createEvent(unique_id=None, **kw)
-    
+
     def on_invite(self, event):
         if self._on_invite is not None:
             self._on_invite(self, event)
 
     def on_status_change(self, event, from_status, to_status):
         pass
-            
+
     # ACCESSORS
 
     def getAttendeeId(self):
@@ -539,7 +539,7 @@ class AttendeeBase:
 
     def getAttendeeType(self):
         return self._attendee_type
-    
+
     def getEvents(self, period, search_criteria=None):
         if search_criteria is None:
             search_criteria = SearchCriteria(attendees=[self])
@@ -555,7 +555,7 @@ class AttendeeBase:
             search_criteria = search_criteria.clone(attendees=[self])
         return self._getStorageManager().getOccurrences(
             period, search_criteria)
-    
+
     def getOrganizedEvents(self, search_criteria=None):
         if search_criteria is None:
             search_criteria = SearchCriteria(organizer=self)
@@ -566,14 +566,14 @@ class AttendeeBase:
 
     def _getStorageManager(self):
         raise NotImplementedError
-    
+
 class Attendee(AttendeeBase):
     def __init__(self, storage_manager, attendee_id,
                  name, attendee_type, on_invite=None):
         AttendeeBase.__init__(
             self, attendee_id, name, attendee_type, on_invite)
         self._storage_manager = storage_manager
-    
+
     def _getStorageManager(self):
         return self._storage_manager
 
@@ -581,7 +581,7 @@ ical_weekdays = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']
 
 class CalendarBase:
     implements(ICalendar)
-    
+
     def __init__(self):
         self._attendees = self._initAttendees()
 
@@ -589,7 +589,7 @@ class CalendarBase:
         return {}
 
     # MANIPULATORS
-    
+
     def addAttendee(self, attendee):
         self._attendees[attendee.getAttendeeId()] = None
 
@@ -602,15 +602,15 @@ class CalendarBase:
         attendee_id = self._attendees.keys()[0]
         source = self._getAttendeeSource()
         return source.getAttendee(attendee_id)
-        
-    def import_(self, text, period=(None, None), search_criteria=None, 
+
+    def import_(self, text, period=(None, None), search_criteria=None,
                 synchronize=0):
         """Given iCalendar text, import events.
 
         This overwrites existing event data where necessary,
-        and creates new events. If synchronize is set to 1, 
-        it also removes existing events. This is used when the 
-        iCalendar client is assumed to have retrieved the calendar 
+        and creates new events. If synchronize is set to 1,
+        it also removes existing events. This is used when the
+        iCalendar client is assumed to have retrieved the calendar
         first, as when you are using it via WebDAV.
         """
         # repair text with proper line endings if necessary
@@ -650,7 +650,7 @@ class CalendarBase:
         event = self.getEvent(uid)
         spec = self._importEventSpecification(e)
         spec.setOnObject(event)
-        
+
 ##         # XXX this (like the edit forms) implicitly updates events
 ##         # this may not work for non ZODB storages
 ##         event.categories = self._getCategories(e)
@@ -666,7 +666,7 @@ class CalendarBase:
 ##             event.recurrence = self._getRecurrenceRule(rrule)
 ##         else:
 ##             event.recurrence = None
-   
+
     def _importNewEvent(self, uid, e):
         m = self._getStorageManager()
         spec = self._importEventSpecification(e)
@@ -676,10 +676,10 @@ class CalendarBase:
         """Given an iCalendar event object, create event specification.
         """
         asrc = self._getAttendeeSource()
-        
+
         kw = {}
         kw['dtstart'], kw['duration'], kw['allday'] =\
-                       self._getDtstartDuration(e)            
+                       self._getDtstartDuration(e)
 
         kw['title'] = e.decoded('SUMMARY', '')
         kw['description'] = e.decoded('DESCRIPTION', '')
@@ -691,13 +691,13 @@ class CalendarBase:
             organizer = asrc.getAttendeeFromSpec(e['organizer'])
         else:
             organizer = None
-            
+
         if organizer is None:
             organizer = self.getMainAttendee()
 
         kw['organizer'] = organizer
-        
-        
+
+
         if e.has_key('ATTENDEE'):
             attendees = []
             attendee_list = e['ATTENDEE']
@@ -709,21 +709,21 @@ class CalendarBase:
                 role = attendee_spec.params.get('ROLE', 'REQ-PARTICIPANT')
                 attendees.append((attendee, role, status))
             kw['attendees'] = attendees
-            
+
         kw['categories'] = self._getCategories(e)
         kw['transparent'] = e.decoded('TRANSP', 'OPAQUE') == 'TRANSPARENT'
         kw['access'] = e.decoded('CLASS', 'PUBLIC')
-        kw['document'] = e.decoded('ATTACH', 'NONE')
+        kw['document'] = e.decoded('ATTACH', None)
         rrule = e.decoded('RRULE', None)
         if rrule is not None:
             kw['recurrence'] = self._getRecurrenceRule(rrule)
         else:
             kw['recurrence'] = None
         return EventSpecification(**kw)
-        
+
     def _deleteEvent(self, uid):
         self._getStorageManager().deleteEvent(uid)
-    
+
     def _getDtstartDuration(self, component):
         dtstart = component.decoded('DTSTART', None)
         dtend = component.decoded('DTEND', None)
@@ -806,7 +806,7 @@ class CalendarBase:
             else:
                 categories = Set(categories)
         return categories
- 
+
     def _repairText(self, text):
         # repair text to have \r\n if necessary
         i = text.find('\n')
@@ -815,9 +815,9 @@ class CalendarBase:
                 lines = text.split('\n')
                 text = '\r\n'.join(lines)
         return text
-    
+
     # ACCESSORS
-    
+
     def getEvent(self, event_id):
         # XXX should check whether event applies to any of the
         # attendees
@@ -826,7 +826,7 @@ class CalendarBase:
 
     def hasEvent(self, event_id):
         return self._getStorageManager().hasEvent(event_id)
-    
+
     def getEvents(self, period, search_criteria=None):
         result = {}
         if search_criteria is not None:
@@ -844,20 +844,20 @@ class CalendarBase:
         else:
             search_criteria  = SearchCriteria(attendees=self.getAttendees())
         return self._getStorageManager().getOccurrences(period, search_criteria)
-    
+
     def getOccurrencesSegmented(self, period, search_criteria=None):
         # first get occurrences
         occurrences = self.getOccurrences(period, search_criteria)
         # now segment occurrences, spitting them up where they cross
         # borders (day and start and end of period)
         return segmentOccurrences(period, occurrences)
-    
+
     def getEventsInDay(self, date, search_criteria=None):
         start = datetime(date.year, date.month, date.day)
         end = start + timedelta(1)
         period = (start, end)
         return self.getEvents(period, search_criteria)
-    
+
     def getOccurrencesInDay(self, date, search_criteria=None):
         """Returns all occurrences in day.
 
@@ -878,7 +878,7 @@ class CalendarBase:
 
     def getCurrentYear(self):
         return self.getToday().year
-    
+
     def getToday(self):
         return datetime.today()
 
@@ -928,6 +928,8 @@ class CalendarBase:
             if event.categories:
                 e.set_inline('categories', list(event.categories))
             e.add('class', event.access)
+            if event.document:
+                e.add('attach', event.document)
             if event.recurrence is not None:
                 r = event.recurrence
                 d = {'freq': r.ical_freq, 'interval': r.interval}
@@ -946,13 +948,13 @@ class CalendarBase:
 
     def _getAttendeeSource(self):
         raise NotImplementedError
-    
+
 class Calendar(CalendarBase):
     def __init__(self, storage_manager, attendee_source):
         CalendarBase.__init__(self)
         self._storage_manager = storage_manager
         self._attendee_source = attendee_source
-        
+
     def _getStorageManager(self):
         return self._storage_manager
 
@@ -965,20 +967,20 @@ class SimpleAttendeeSource:
     Basically only there for testing reasons.
     """
     implements(IAttendeeSource)
-    
+
     def __init__(self, storage_manager):
         self._storage_manager = storage_manager
         self._attendees = {}
 
     # MANIPULATORS
-    
+
     def createIndividual(self, attendee_id, name):
         attendee = Attendee(
             self._storage_manager, attendee_id,
             name, 'INDIVIDUAL', on_invite=None)
         self._attendees[attendee_id] = attendee
         return attendee
-    
+
     def createRoom(self, attendee_id, name, on_invite=None):
         attendee = Attendee(
             self._storage_manager,
@@ -987,14 +989,14 @@ class SimpleAttendeeSource:
         return attendee
 
     # ACCESSORS
-    
+
     def getAttendee(self, attendee_id):
         return self._attendees[attendee_id]
 
     def getCurrentUserAttendee(self):
         # there is no concept of a current user at this level
         return None
-    
+
     def findByName(self, query_str, attendee_type=None):
         result = []
         for attendee in self._attendees.values():
@@ -1005,7 +1007,7 @@ class SimpleAttendeeSource:
                 continue
             result.append(attendee)
         return result
-    
+
     def getAttendeesOfType(self, attendee_type):
         result = []
         for attendee in self.attendees.values():
@@ -1023,7 +1025,7 @@ class SimpleAttendeeSource:
 
 def acceptIfPossible(attendee, event):
     # always accept for now
-    event.setParticipationStatus(attendee, 'ACCEPTED')    
+    event.setParticipationStatus(attendee, 'ACCEPTED')
 
 def Period(dtstart, duration):
     return (dtstart, timedelta(minutes=duration))
@@ -1065,7 +1067,7 @@ def float_datetime(dt):
 def assertPeriodBounded(period):
     assert period[0] is not None, "Period is unbounded (into the past)"
     assert period[1] is not None, "Period is unbounded (into the future)"
-    
+
 def addrspec_unique_id(unique_maker, hostname):
     result = iso8601(datetime.now())
     result += '-%s' % unique_maker

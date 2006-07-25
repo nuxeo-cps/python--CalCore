@@ -13,7 +13,7 @@ class AyeCalTestCase(unittest.TestCase):
         martijn = self._s.createIndividual('martijn', 'Martijn')
 
         self._calendar.addAttendee(martijn)
-        
+
         meeting = martijn.createEvent(
             dtstart=datetime(2005, 4, 10, 16, 00),
             duration=timedelta(minutes=60),
@@ -26,24 +26,25 @@ class AyeCalTestCase(unittest.TestCase):
             status='TENTATIVE',
             title='Another meeting',
             location='Room 2',
+            document='/path/to/some/document',
             categories=Set(['Public Holiday',
                             'Wonderful Event']))
 
         self._meeting_uid = meeting.unique_id
         self._meeting2_uid = meeting2.unique_id
-    
+
     def test_export_import1(self):
         # export the calendar to iCalendar text
         text = self._calendar.export()
-        # now we import the text again. 
+        # now we import the text again.
         self._calendar.import_(text)
 
         # nothing should be changed!
-        
+
         # we need to reconnect to the events
         meeting = self._calendar.getEvent(self._meeting_uid)
         meeting2 = self._calendar.getEvent(self._meeting2_uid)
-        
+
         self.assertEquals(
             "Martijn's Meeting",
             meeting.title)
@@ -59,13 +60,15 @@ class AyeCalTestCase(unittest.TestCase):
         self.assertEquals(
             Set(['Public Holiday', 'Wonderful Event']),
             meeting2.categories)
-        
+        self.assertEquals(None, meeting.document)
+        self.assertEquals('/path/to/some/document', meeting2.document)
+
     def test_export_import2(self):
         # export the calendar to iCalendar text
         text = self._calendar.export()
         # change a summary in the text
-        text = text.replace("Martijn's Meeting", "Foo's Meeting") 
-        # now we import the text again. 
+        text = text.replace("Martijn's Meeting", "Foo's Meeting")
+        # now we import the text again.
         self._calendar.import_(text)
         meeting = self._calendar.getEvent(self._meeting_uid)
         meeting2 = self._calendar.getEvent(self._meeting2_uid)
@@ -83,7 +86,7 @@ class AyeCalTestCase(unittest.TestCase):
         # change a dtstart in the text
         text = text.replace('DTSTART:20050411T170000',
                             'DTSTART:20050412T180000')
-        # now we import the text again. 
+        # now we import the text again.
         self._calendar.import_(text)
         meeting = self._calendar.getEvent(self._meeting_uid)
         meeting2 = self._calendar.getEvent(self._meeting2_uid)
@@ -120,7 +123,7 @@ END:VEVENT"""
         self.assertEquals(
             timedelta(hours=1),
             meeting3.duration)
-    
+
     def test_export_import_remove_event(self):
         # export the calendar to iCalendar text
         text = self._calendar.export()
@@ -156,7 +159,7 @@ END:VEVENT"""
         meeting2 = self._m.getEvent(self._meeting2_uid)
         self.assertEquals(
             timedelta(minutes=75),
-            meeting2.duration)    
+            meeting2.duration)
 
     def test_export_import_recurrence(self):
         # export it
@@ -171,7 +174,7 @@ SUMMARY:Inserted meeting
 UID:hoi
 RRULE:FREQ=DAILY;INTERVAL=1
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)     
+        text = insert_event_textually(text, new_event)
         # now import again
         self._calendar.import_(text)
         occurrences = self._calendar.getOccurrences((datetime(2005, 4, 1),
@@ -243,7 +246,7 @@ SUMMARY:Inserted meeting
 UID:hoi
 STATUS:CONFIRMED
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)     
+        text = insert_event_textually(text, new_event)
         # now import again
         self._calendar.import_(text)
         # now we should find that the existing events are still
@@ -273,7 +276,7 @@ UID:hoi
 STATUS:CONFIRMED
 CATEGORIES:HOLIDAY,MISC
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)        
+        text = insert_event_textually(text, new_event)
         # now import again
         self._calendar.import_(text)
         self.assertEquals(
@@ -298,12 +301,12 @@ STATUS:CONFIRMED
 CATEGORIES:HOLIDAY
 CATEGORIES:MISC
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)        
+        text = insert_event_textually(text, new_event)
         # now import again
         self._calendar.import_(text)
         self.assertEquals(
             Set(['HOLIDAY', 'MISC']),
-            self._calendar.getEvent('hoi').categories)      
+            self._calendar.getEvent('hoi').categories)
 
     def test_categories_existing_event(self):
         text = self._calendar.export()
@@ -313,7 +316,7 @@ END:VEVENT"""
         self._calendar.import_(text)
         self.assertEquals(
             Set(['HOLIDAY', 'MISC']),
-            self._calendar.getEvent(self._meeting_uid).categories)  
+            self._calendar.getEvent(self._meeting_uid).categories)
 
     def test_categories_existing_event_different(self):
         text = self._calendar.export()
@@ -354,7 +357,7 @@ UID:hoi
 STATUS:CONFIRMED
 TRANSP:TRANSPARENT
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)        
+        text = insert_event_textually(text, new_event)
         # now import again
         self._calendar.import_(text)
         self.assertEquals(
@@ -388,7 +391,7 @@ END:VEVENT"""
         self.assertEquals(
             'PRIVATE',
             self._calendar.getEvent(self._meeting_uid).access)
-        
+
     def test_access_change_confidential(self):
         text = self._calendar.export()
         text = text.replace('CLASS:PUBLIC', 'CLASS:CONFIDENTIAL')
@@ -396,7 +399,7 @@ END:VEVENT"""
         self.assertEquals(
             'CONFIDENTIAL',
             self._calendar.getEvent(self._meeting_uid).access)
-        
+
 class RecurrentImportExportTestCase(unittest.TestCase):
     def setUp(self):
         self._m = cal.StorageManager()
@@ -420,7 +423,7 @@ SUMMARY:Test meeting
 UID:hoi
 RRULE:FREQ=DAILY;INTERVAL=1
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)     
+        text = insert_event_textually(text, new_event)
         self._calendar.import_(text)
         occurrences = self._calendar.getOccurrences(
             (datetime(2005, 4, 1),
@@ -439,7 +442,7 @@ SUMMARY:Test meeting
 UID:hoi
 RRULE:FREQ=DAILY;INTERVAL=1;UNTIL=20050406
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)     
+        text = insert_event_textually(text, new_event)
         self._calendar.import_(text)
         occurrences = self._calendar.getOccurrences(
             (datetime(2005, 4, 1),
@@ -458,7 +461,7 @@ SUMMARY:Test meeting
 UID:hoi
 RRULE:FREQ=DAILY;INTERVAL=1;COUNT=4
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)     
+        text = insert_event_textually(text, new_event)
         self._calendar.import_(text)
         occurrences = self._calendar.getOccurrences(
             (datetime(2005, 4, 1),
@@ -477,7 +480,7 @@ SUMMARY:Test meeting
 UID:hoi
 RRULE:FREQ=YEARLY;INTERVAL=1
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)     
+        text = insert_event_textually(text, new_event)
         self._calendar.import_(text)
         occurrences = self._calendar.getOccurrences(
             (datetime(2005, 3, 1),
@@ -496,8 +499,8 @@ SUMMARY:Test meeting
 UID:hoi
 RRULE:FREQ=WEEKLY;INTERVAL=1
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)     
-        self._calendar.import_(text)   
+        text = insert_event_textually(text, new_event)
+        self._calendar.import_(text)
         occurrences = self._calendar.getOccurrences(
             (datetime(2005, 3, 1),
              datetime(2005, 4, 30)))
@@ -521,8 +524,8 @@ SUMMARY:Test meeting
 UID:hoi
 RRULE:FREQ=WEEKLY;INTERVAL=1;BYDAY=MO,FR
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)     
-        self._calendar.import_(text)   
+        text = insert_event_textually(text, new_event)
+        self._calendar.import_(text)
         occurrences = self._calendar.getOccurrences(
             (datetime(2005, 3, 1),
              datetime(2005, 4, 30)))
@@ -537,7 +540,7 @@ END:VEVENT"""
         self.assertEquals(datetime(2005, 4, 22, 16), occurrences[6].dtstart)
         self.assertEquals(datetime(2005, 4, 25, 16), occurrences[7].dtstart)
         self.assertEquals(datetime(2005, 4, 29, 16), occurrences[8].dtstart)
-         
+
     def test_monthly_recurrence_simple(self):
         text = self._calendar.export()
         # now textually add a new recurrent event
@@ -550,7 +553,7 @@ SUMMARY:Test meeting
 UID:hoi
 RRULE:FREQ=MONTHLY;INTERVAL=1
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)     
+        text = insert_event_textually(text, new_event)
         self._calendar.import_(text)
         occurrences = self._calendar.getOccurrences(
             (datetime(2005, 3, 1),
@@ -575,7 +578,7 @@ END:VEVENT"""
         # original event is used instead, starting to count from
         # the start of the month, or the end of the month if the
         # BYDAY starts with -.
-        text = insert_event_textually(text, new_event)     
+        text = insert_event_textually(text, new_event)
         self._calendar.import_(text)
         occurrences = self._calendar.getOccurrences(
             (datetime(2005, 3, 1),
@@ -607,7 +610,7 @@ END:VEVENT"""
         # matters and will assume the same day in the month as the
         # original event is used instead, starting to count from
         # the end the month
-        text = insert_event_textually(text, new_event)     
+        text = insert_event_textually(text, new_event)
         self._calendar.import_(text)
         occurrences = self._calendar.getOccurrences(
             (datetime(2005, 3, 1),
@@ -633,7 +636,7 @@ LOCATION:Room Foo
 SUMMARY:Test meeting
 UID:hoi
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)     
+        text = insert_event_textually(text, new_event)
         self._calendar.import_(text)
         occurrences = self._calendar.getOccurrences(
             (datetime(2005, 5, 1),
@@ -645,7 +648,7 @@ END:VEVENT"""
         self.assertEquals(
             timedelta(1),
             occurrences[0].duration)
-        
+
     def test_no_duration_no_dtend_datetime(self):
         # when dtstart is a DATETIME, and dtend is absent, dtend is same
         # as dtstart
@@ -657,7 +660,7 @@ LOCATION:Room Foo
 SUMMARY:Test meeting
 UID:hoi
 END:VEVENT"""
-        text = insert_event_textually(text, new_event)     
+        text = insert_event_textually(text, new_event)
         self._calendar.import_(text)
         occurrences = self._calendar.getOccurrences(
             (datetime(2005, 5, 1),
@@ -669,7 +672,7 @@ END:VEVENT"""
         self.assertEquals(
             timedelta(0),
             occurrences[0].duration)
-        
+
 class AllDayImportExportTestCase(unittest.TestCase):
     def setUp(self):
         self._m = cal.StorageManager()
@@ -720,7 +723,7 @@ class AllDayImportExportTestCase(unittest.TestCase):
         self.assert_(event.allday)
         self.assertEquals(timedelta(days=1),
                           event.duration)
-        
+
     def test_allday_export_two_days(self):
         meeting = self._martijn.createEvent(
             dtstart=datetime(2005, 4, 10, 16, 00),
@@ -741,7 +744,7 @@ class AllDayImportExportTestCase(unittest.TestCase):
         self.assert_(event.allday)
         self.assertEquals(timedelta(days=2),
                           event.duration)
-    
+
 def insert_event_textually(text, event_text):
     # correct newline story
     event_text = '\r\n'.join(event_text.strip().split('\n'))
@@ -750,7 +753,7 @@ def insert_event_textually(text, event_text):
     i = text.find('END:VCALENDAR')
     # insert just before it
     result = text[:i] + event_text + text[i:]
-    return result    
+    return result
 
 def insert_lines_textually(text, after, lines):
     lines = [line.strip() + '\r\n' for line in lines]
@@ -760,7 +763,7 @@ def insert_lines_textually(text, after, lines):
     result = text[:i] + ''.join(lines) + text[i:]
     return result
 
-        
+
 def test_suite():
     suite = unittest.TestSuite()
     suite.addTests([unittest.makeSuite(AyeCalTestCase)])
