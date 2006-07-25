@@ -17,6 +17,7 @@
 #
 # $Id$
 
+from logging import getLogger
 from datetime import datetime, timedelta, date, time
 import socket # to get hostname
 combine = datetime.combine
@@ -582,6 +583,8 @@ ical_weekdays = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']
 class CalendarBase:
     implements(ICalendar)
 
+    _logger = getLogger('calcore.CalendarBase')
+
     def __init__(self):
         self._attendees = self._initAttendees()
 
@@ -613,6 +616,7 @@ class CalendarBase:
         iCalendar client is assumed to have retrieved the calendar
         first, as when you are using it via WebDAV.
         """
+        self._logger.debug('import_ raw ical text: \n\n%s\n\n' % text)
         # repair text with proper line endings if necessary
         text = self._repairText(text)
         # get all events (to use when we import)
@@ -941,7 +945,9 @@ class CalendarBase:
             e.add('status', event.status)
             # attendee needs email address info
             ical.add_component(e)
-        return ical.as_string()
+        ical_text = ical.as_string()
+        self._logger.debug('export generated ical text: \n\n%s\n\n' % ical_text)
+        return ical_text
 
     def _getStorageManager(self):
         raise NotImplementedError
