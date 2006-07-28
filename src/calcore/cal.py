@@ -655,22 +655,6 @@ class CalendarBase:
         spec = self._importEventSpecification(e)
         spec.setOnObject(event)
 
-##         # XXX this (like the edit forms) implicitly updates events
-##         # this may not work for non ZODB storages
-##         event.categories = self._getCategories(e)
-##         transparent = e.decoded('TRANSP', None)
-##         if transparent is not None:
-##             event.transparent = transparent == 'TRANSPARENT'
-##         dtstart, duration, allday = self._getDtstartDuration(e)
-##         event.dtstart = dtstart
-##         event.duration = duration
-##         event.allday = allday
-##         rrule = e.decoded('RRULE', None)
-##         if rrule is not None:
-##             event.recurrence = self._getRecurrenceRule(rrule)
-##         else:
-##             event.recurrence = None
-
     def _importNewEvent(self, uid, e):
         m = self._getStorageManager()
         spec = self._importEventSpecification(e)
@@ -732,6 +716,10 @@ class CalendarBase:
         dtstart = component.decoded('DTSTART', None)
         dtend = component.decoded('DTEND', None)
         duration = component.decoded('DURATION', None)
+        if duration is not None and dtend is not None:
+            # too much info: set duration back to None to recompute it and
+            # ensure consistency
+            duration = None
         assert dtstart is not None
         assert ((dtend is None and duration is not None) or
                 (dtend is not None and duration is None) or
