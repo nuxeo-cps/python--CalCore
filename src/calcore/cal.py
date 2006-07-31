@@ -777,6 +777,9 @@ class CalendarBase:
         if duration is not None and dtend is not None:
             # too much info: set duration back to None to recompute it and
             # ensure consistency
+            self._logger.warning("Invalid iCalendar data: Event '%s' has both "
+                                 "dtend and duration. Ignoring the duration." %
+                                 component.decoded('UID'))
             duration = None
         assert dtstart is not None
         assert ((dtend is None and duration is not None) or
