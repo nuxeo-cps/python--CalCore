@@ -940,10 +940,9 @@ class CalendarBase:
         return result
 
     def export(self, period=(None, None), search_criteria=None):
-        """Export calendar data in ICalendar format.
-        """
+        """Export calendar data in ICalendar format"""
         ical = icalendar.Calendar()
-        ical.add('prodid', '-//CPS Shared Calendar//nuxeo.com//')
+        ical.add('prodid', '-//CalCore //nuxeo.com//')
         ical.add('version', '1.0')
 
         for event in self.getEvents(period, search_criteria):
@@ -952,6 +951,7 @@ class CalendarBase:
         ical_text = ical.as_string()
         self._logger.debug('export generated ical text: \n\n%s\n\n' % ical_text)
         return ical_text
+
 
     def _getStorageManager(self):
         raise NotImplementedError
