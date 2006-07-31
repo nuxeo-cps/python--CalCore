@@ -526,11 +526,12 @@ class EventBase:
             e.add('transp', 'TRANSPARENT')
         else:
             e.add('transp', 'OPAQUE')
+        e.add('uid', self.unique_id)
         if private:
             # Hide all non-time information as it may be sensitive.
+            e.add('summary', _("Private Event"))
             return e
 
-        e.add('uid', self.unique_id)
         e.add('summary', self.title)
         if self.description:
             e.add('description', self.description)
