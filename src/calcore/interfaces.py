@@ -370,7 +370,7 @@ class ICalendar(Interface):
         The period and search_criteria can optionally be specified;
         by default all events in the calendar are exported.
         """
-        
+
 Unchanged = object() # marker
 
 class IRecurrenceRule(Interface):
@@ -590,6 +590,11 @@ class ICalendarEvent(ITimed):
         title=_("All Day Event"),
         required=False)
     
+    def export(private=False):
+        """Returns an icalendar.Event() object for ical export.
+        
+        By setting private to True, only the time and date will be exported"""
+        
     # we're not supporting the schoolbell event comparison semantics yet.
     
 ##     def __eq__(other):

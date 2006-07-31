@@ -12,4 +12,6 @@ Bug fixes:
   (duration is recomputed to ensure consistency)
 New internal features:
 ~~~~~~~~~~~~~~~~~~~~~~
--
+- Events now have an export method, and calendar.export call it instead of
+  exporting things themselves. This is to allow easier overrides of both
+  events and calendar exports.

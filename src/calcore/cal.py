@@ -488,6 +488,62 @@ class EventBase:
                 continue
             result.append(Occurrence(dtstart, self.duration, self))
         return result
+    
+    def export(self, private=False):
+        """Exports the event as an icalendar.Event. 
+        
+        Setting provate to True will hide all information except date/time
+        information. This should be used for private events when exporting
+        is done by somebody who does not have full rights to the event"""
+        
+        e = icalendar.Event()
+        if not self.allday:
+            e.add('dtstart', self.dtstart)
+            # exporting duration directly instead of dtend
+            # seems to confuse some clients, like KOrganizer,
+            # so calculate dtend instead
+            e.add('dtend', self.dtstart + self.duration)
+        else:
+            # all day event
+            # create dtstart with VALUE=DATE property
+            dtstart_prop = icalendar.vDate(self.dtstart.date())
+            dtstart_prop.params['VALUE'] = icalendar.vText('DATE')
+            e.add('dtstart', dtstart_prop, encode=0)
+            # now create dtend with VALUE=DATE property
+            dtend = self.dtstart + self.duration
+            dtend_prop = icalendar.vDate(dtend)
+            dtend_prop.params['VALUE'] = icalendar.vText('DATE')
+            e.add('dtend', dtend_prop, encode=0)
+        if self.recurrence is not None:
+            r = self.recurrence
+            d = {'freq': r.ical_freq, 'interval': r.interval}
+            if r.count is not None:
+                d['count'] = r.count
+            if r.until is not None:
+                d['until'] = r.until
+            e.add('rrule', icalendar.vRecur(d))
+        if self.transparent:
+            e.add('transp', 'TRANSPARENT')
+        else:
+            e.add('transp', 'OPAQUE')
+        if private:
+            # Hide all non-time information as it may be sensitive.
+            return e
+
+        e.add('uid', self.unique_id)
+        e.add('summary', self.title)
+        if self.description:
+            e.add('description', self.description)
+        if self.location:
+            e.add('location', self.location)
+        if self.categories:
+            e.set_inline('categories', list(self.categories))
+        e.add('class', self.access)
+        if self.document:
+            e.add('attach', self.document)
+        e.add('status', self.status)
+        return e
+
 
 class Timed:
     implements(ITimed)
@@ -625,6 +681,8 @@ class CalendarBase:
         known_uids = Set([event.unique_id for event in events])
         # now parse iCalendar text
         ical = icalendar.Calendar.from_string(text)
+        if ical is None:
+            return
         ical_uids = Set()
         # now walk through all events
         for e in ical.walk('VEVENT'):
@@ -889,49 +947,7 @@ class CalendarBase:
         ical.add('version', '1.0')
 
         for event in self.getEvents(period, search_criteria):
-            e = icalendar.Event()
-            e.add('uid', event.unique_id)
-            e.add('summary', event.title)
-            if event.transparent:
-                e.add('transp', 'TRANSPARENT')
-            else:
-                e.add('transp', 'OPAQUE')
-            if event.description:
-                e.add('description', event.description)
-            if not event.allday:
-                e.add('dtstart', event.dtstart)
-                # exporting duration directly instead of dtend
-                # seems to confuse some clients, like KOrganizer,
-                # so calculate dtend instead
-                e.add('dtend', event.dtstart + event.duration)
-            else:
-                # all day event
-                # create dtstart with VALUE=DATE property
-                dtstart_prop = icalendar.vDate(event.dtstart.date())
-                dtstart_prop.params['VALUE'] = icalendar.vText('DATE')
-                e.add('dtstart', dtstart_prop, encode=0)
-                # now create dtend with VALUE=DATE property
-                dtend = event.dtstart + event.duration
-                dtend_prop = icalendar.vDate(dtend)
-                dtend_prop.params['VALUE'] = icalendar.vText('DATE')
-                e.add('dtend', dtend_prop, encode=0)
-            if event.location:
-                e.add('location', event.location)
-            if event.categories:
-                e.set_inline('categories', list(event.categories))
-            e.add('class', event.access)
-            if event.document:
-                e.add('attach', event.document)
-            if event.recurrence is not None:
-                r = event.recurrence
-                d = {'freq': r.ical_freq, 'interval': r.interval}
-                if r.count is not None:
-                    d['count'] = r.count
-                if r.until is not None:
-                    d['until'] = r.until
-                e.add('rrule', icalendar.vRecur(d))
-            e.add('status', event.status)
-            # attendee needs email address info
+            e = event.export()
             ical.add_component(e)
         ical_text = ical.as_string()
         self._logger.debug('export generated ical text: \n\n%s\n\n' % ical_text)
