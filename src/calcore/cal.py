@@ -527,6 +527,7 @@ class EventBase:
         else:
             e.add('transp', 'OPAQUE')
         e.add('uid', self.unique_id)
+        e.add('status', self.status)
         if private:
             # Hide all non-time information as it may be sensitive.
             e.add('summary', _("Private Event"))
@@ -542,7 +543,6 @@ class EventBase:
         e.add('class', self.access)
         if self.document:
             e.add('attach', self.document)
-        e.add('status', self.status)
         return e
 
 
