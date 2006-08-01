@@ -99,7 +99,7 @@ Regression tests:
 
         >>> from zope.interface.verify import verifyObject
         >>> from calcore import interfaces
-        >>> dino = cal.AttendeeBase('a', 'b', 'c', 'd')
+        >>> dino = cal.AttendeeBase('a', 'b', 'c')
         >>> verifyObject(interfaces.IAttendee, dino)
         True
 

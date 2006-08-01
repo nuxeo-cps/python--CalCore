@@ -33,12 +33,16 @@ from interfaces import IAttendee, IAttendeeSource,\
      IStorageManager, IStorage, IInvitableCalendarEvent, ICalendar,\
      ISearchCriteria, ICalendarOccurrence, ITimed, IEventSpecification
 from zope.schema.vocabulary import SimpleVocabulary, SimpleTerm
+from zope.event import notify
+from events import *
 
 try:
     from zope.i18nmessageid import MessageFactory
 except ImportError:
     from zope.i18nmessageid import MessageIDFactory as MessageFactory
 _ = MessageFactory("calendar")
+
+_marker = object()
 
 class EventSpecification:
     """Structure used to pass around the specification of an event.
@@ -84,11 +88,10 @@ class EventSpecification:
         """Set this specification on underlying object.
         """
         for name, value in self.__dict__.items():
-            # I don't like the exception for the organizer,
-            # but does make sense.. //faassen
-            # And now also attendees //regebro
             if name not in ('organizer', 'attendees'):
-                setattr(o, name, value)
+                if getattr(o, name, _marker) != value:
+                    setattr(o, name, value)
+                    modified = True
         if self.organizer is not None:
             o._setParticipationStatus(self.organizer, 'ACCEPTED')
             o.setParticipationRole(self.organizer, 'REQ-PARTICIPANT')
@@ -100,6 +103,25 @@ class EventSpecification:
             for (attendee, role, status) in self.attendees:
                 o.setParticipationRole(attendee, role)
                 o._setParticipationStatus(attendee, status)
+
+    def willModify(self, o):
+        """Checks is this specification would modify the object.
+        """
+        for name, value in self.__dict__.items():
+            if name not in ('organizer', 'attendees'):
+                if getattr(o, name, _marker) != value:
+                    return True
+        if (self.organizer is not None and
+            o._organizer_id != self.organizer.getAttendeeId() or
+            o.getParticipationStatus(self.organizer) != 'ACCEPTED' or
+            o.getParticipationRole(self.organizer) != 'REQ-PARTICIPANT'):
+            return True
+
+        if self.attendees:
+            for (attendee, role, status) in self.attendees:
+               if (o.getParticipationStatus(attendee) != status or
+                   o.getParticipationRole(attendee) != 'REQ-PARTICIPANT'):
+                   return True
 
 
 class StorageManagerBase:
@@ -115,13 +137,17 @@ class StorageManagerBase:
         self._storage = storage
 
     def createEvent(self, unique_id=None, **kw):
-        return self._storage.createEvent(unique_id, EventSpecification(**kw))
+        return self.createEventFromSpecification(unique_id, 
+                                                 EventSpecification(**kw))
 
     def createEventFromSpecification(self, unique_id, spec):
-        return self._storage.createEvent(unique_id, spec)
+        event = self._storage.createEvent(unique_id, spec)
+        notify(EventCreatedEvent(event))
+        return event
 
     def deleteEvent(self, event):
         self._storage.deleteEvent(event)
+        notify(EventDeletedEvent(event))
 
     # ACCESSORS
 
@@ -389,7 +415,6 @@ class EventBase:
             if self.getParticipationStatus(attendee) is None:
                 self.setParticipationStatus(attendee, 'NEEDS-ACTION')
                 self.setParticipationRole(attendee, 'REQ-PARTICIPANT')
-                attendee.on_invite(self)
 
     def setParticipationStatus(self, attendee, status):
         assert status in [None, 'NEEDS-ACTION', 'ACCEPTED', 'DECLINED',
@@ -398,7 +423,7 @@ class EventBase:
         if old_status == status:
             return
         self._setParticipationStatus(attendee, status)
-        attendee.on_status_change(self, old_status, status)
+        notify(EventParticipationChangeEvent(self, attendee, old_status, status))
 
     def _setParticipationStatus(self, attendee, status):
         # implementation specific overriding
@@ -571,24 +596,16 @@ class Occurrence:
 class AttendeeBase:
     implements(IAttendee)
 
-    def __init__(self, attendee_id, name, attendee_type, on_invite):
+    def __init__(self, attendee_id, name, attendee_type):
         self._attendee_id = attendee_id
         self._name = name
         self._attendee_type = attendee_type
-        self._on_invite = on_invite
 
     # MANIPULATORS
 
     def createEvent(self, **kw):
         kw['organizer'] = self
         return self._getStorageManager().createEvent(unique_id=None, **kw)
-
-    def on_invite(self, event):
-        if self._on_invite is not None:
-            self._on_invite(self, event)
-
-    def on_status_change(self, event, from_status, to_status):
-        pass
 
     # ACCESSORS
 
@@ -627,9 +644,9 @@ class AttendeeBase:
 
 class Attendee(AttendeeBase):
     def __init__(self, storage_manager, attendee_id,
-                 name, attendee_type, on_invite=None):
+                 name, attendee_type):
         AttendeeBase.__init__(
-            self, attendee_id, name, attendee_type, on_invite)
+            self, attendee_id, name, attendee_type)
         self._storage_manager = storage_manager
 
     def _getStorageManager(self):
@@ -712,7 +729,9 @@ class CalendarBase:
     def _importExistingEvent(self, uid, e):
         event = self.getEvent(uid)
         spec = self._importEventSpecification(e)
-        spec.setOnObject(event)
+        if spec.willModify(event):
+            spec.setOnObject(event)
+            notify(EventModifiedEvent(event))
 
     def _importNewEvent(self, uid, e):
         m = self._getStorageManager()
@@ -991,14 +1010,14 @@ class SimpleAttendeeSource:
     def createIndividual(self, attendee_id, name):
         attendee = Attendee(
             self._storage_manager, attendee_id,
-            name, 'INDIVIDUAL', on_invite=None)
+            name, 'INDIVIDUAL')
         self._attendees[attendee_id] = attendee
         return attendee
 
-    def createRoom(self, attendee_id, name, on_invite=None):
+    def createRoom(self, attendee_id, name):
         attendee = Attendee(
             self._storage_manager,
-            attendee_id, name, 'ROOM', on_invite)
+            attendee_id, name, 'ROOM')
         self._attendees[attendee_id] = attendee
         return attendee
 
@@ -1036,10 +1055,6 @@ class SimpleAttendeeSource:
         id = vcaladdress.decode()
         return self._attendees.get(id, None)
 
-
-def acceptIfPossible(attendee, event):
-    # always accept for now
-    event.setParticipationStatus(attendee, 'ACCEPTED')
 
 def Period(dtstart, duration):
     return (dtstart, timedelta(minutes=duration))

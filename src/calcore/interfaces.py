@@ -204,24 +204,6 @@ class IAttendee(Interface):
         access - access class (PUBLIC, PRIVATE, CONFIDENTIAL)
         """
         
-    def on_invite(event):
-        """Gets triggered when attendees is invited.
-        
-        This is mostly to accept different type of invitation behaviour.
-        For example, if the invitation comes from an attendee that has the 
-        right to accept events for this invited attendee, then typically
-        you want the event to be automatically accepted. This allows you to
-        override the behaviour allowing for custom decisions of who has this
-        right (in zope it could be a permission, for example).        
-        """
-
-    def on_status_change(event, from_status, to_status):
-        """Gets triggered when attendees status is changed.
-        
-        Used for notifications of invitations and acceptances, and such.
-        Will typically be overriden with each specific implementation
-        """
-
     # ACCESSORS
     def getAttendeeId():
         """Get unique attendee id.
@@ -701,6 +683,10 @@ class IEventSpecification(IExtendedCalendarEvent):
         """Set data as attributes on event object.
         """
         
+    def willModify(o):
+        """Checks if the event specification will modify the object.
+        """
+        
 class IInvitableCalendarEvent(IExtendedCalendarEvent):
     
     # MANIPULATORS
@@ -781,3 +767,33 @@ class IInvitableCalendarEvent(IExtendedCalendarEvent):
     def __hash__():
         """Hash value for this event.
         """
+
+#########
+# Events
+#########
+
+# This could be done with zope.app.event, but I don't want to introduce
+# zope.app.event as a dependency. It's not packaged as an egg, for starters.
+
+# Having events for events makes for confusing nomenclature...
+
+class IEventEvent(Interface):
+    """Base calendar event event"""
+
+    event = Attribute("The calendar event of the event.")
+
+class IEventCreatedEvent(IEventEvent):
+    """A calendar event has been created"""
+    
+class IEventModifiedEvent(IEventEvent):
+    """A calendar event has been modified"""
+    
+class IEventDeletedEvent(IEventEvent):
+    """A calendar event has been deleted"""
+    
+class IEventParticipationChangeEvent(IEventModifiedEvent):
+    """A change in participation status for an attendee"""
+    
+    attendee = Attribute("The attendee whose status changed.")
+    old_status = Attribute("The previous status.")
+    old_status = Attribute("The new status.")

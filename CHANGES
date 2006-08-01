@@ -3,7 +3,18 @@ Requires:
 -
 New features:
 ~~~~~~~~~~~~~
--
+- Calcore now sends events on event creation, deletion, status changes and
+  other modifications. 
+  PLEASE NOTE! Since most modifications is done directly on the events, 
+  any system that uses calcore should definitely send EvenModifiedEvents
+  whenever an event is modified! Calcore doesn't subscribe to any events
+  itself, but systems that build on it, like CalZope, will.
+- The on_invite and on_status_change mechanisms has been removed. They were
+  primarily used to send notifications, and this is better done with events.
+  They were also used to change the behaviour for attendees on invites.
+  If you want to do this now, create a subscriber to the relevant events and
+  do the modifications there. An exaple of this exists in 
+  src/calcore/test/test_cal.py: test_inviteEvent().
 Bug fixes:
 ~~~~~~~~~~
 - #1708: no more 'NONE' attachement on import + export the document attribute

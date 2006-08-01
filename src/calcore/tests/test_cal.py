@@ -2,16 +2,26 @@ import unittest
 import doctest
 from calcore import cal
 from datetime import datetime, timedelta
+from calcore.interfaces import IEventParticipationChangeEvent
+
+def _invite_subscriber(eventevent):
+    if IEventParticipationChangeEvent.providedBy(eventevent):
+        # always accept for now
+        eventevent.event.setParticipationStatus(
+            eventevent.attendee, 'ACCEPTED')
 
 class CalTestCase(unittest.TestCase):
     def setUp(self):
         self._m = cal.StorageManager()
         self._m.setStorage(cal.MemoryStorage('storage'))
         self._s = cal.SimpleAttendeeSource(self._m)
-        
-    def test_oninvite(self):
-        room = self._s.createRoom(
-            'room', 'Room', on_invite=cal.acceptIfPossible)
+
+
+    def test_inviteEvent(self):
+        from zope.event import subscribers
+        subscribers.append(_invite_subscriber)
+
+        room = self._s.createRoom('room', 'Room')
         martijn = self._s.createIndividual('martijn', 'Martijn')
         meeting = martijn.createEvent(
             dtstart=datetime(2005, 4, 10, 16, 00),
@@ -22,6 +32,7 @@ class CalTestCase(unittest.TestCase):
         self.assertEquals(
             'ACCEPTED',
             meeting.getParticipationStatus(room))
+        subscribers.remove(_invite_subscriber)
         
     def test_getOccurrencesEndsInPeriod(self):
         martijn = self._s.createIndividual('martijn', 'Martijn')

@@ -51,8 +51,7 @@ There's also a room attendee, which has a policy to always accept
 invitations if it's possible, i.e. there is no other event defined yet
 in that timeframe::
 
-  >>> room1 = s.createRoom('room1', 'Room 1', 
-  ...     on_invite=cal.acceptIfPossible)
+  >>> room1 = s.createRoom('room1', 'Room 1')
 
 Now Florent will create a tentative event for a meeting on april 10,
 2005, at 4 pm, lasting an hour::
@@ -107,12 +106,6 @@ The status for Martijn and Bob will be 'NEEDS-ACTION'::
   >>> [meeting.getParticipationStatus(attendee) for attendee in 
   ...  [martijn, bob]]
   ['NEEDS-ACTION', 'NEEDS-ACTION']
-
-Room 1 has been configured to automatically accept invitations if there
-is not another other booking for that time yet::
-
-  >>> meeting.getParticipationStatus(room1)
-  'ACCEPTED'
 
 Martijn will now see that there action items::
 
