@@ -768,8 +768,8 @@ class CalendarBase:
             kw['recurrence'] = None
         return EventSpecification(**kw)
 
-    def _deleteEvent(self, uid):
-        self._getStorageManager().deleteEvent(uid)
+    def _deleteEvent(self, event):
+        self._getStorageManager().deleteEvent(event)
 
     def _getDtstartDuration(self, component):
         dtstart = component.decoded('DTSTART', None)
