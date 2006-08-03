@@ -6,18 +6,12 @@ recurring events and iCal import/export.
 
 Dependencies
 -----------
-- zope.interface, zope.schema and zope.i18nmessageid from Zope3.
+- zope.interface, zope.schema, zope.i18nmessageid, zope.event from Zope3.  
 - iCalendar from Max M and Codespeak.
 
-You should have recieved CalCore in a bundle that includes all dependencies.
-If for some reason you do not want to use a bundle, the dependencies can be
-found here:
-
-zope.interface     svn://svn.zope.org/repos/main/Zope3/tags/ZopeX3-3.0.0/src/zope/interface
-zope.schema        svn://svn.zope.org/repos/main/Zope3/tags/ZopeX3-3.0.0/src/zope/schema
-zope.i18nmessageid svn://svn.zope.org/repos/main/Zope3/tags/ZopeX3-3.0.0/src/zope/i18nmessageid
-iCalendar          svn:http://codespeak.net/svn/iCalendar/tag/iCalendar-0.10
-
+If you are reading this, you probably downloaded the CalCore tgz. 
+CalCore is also available as a Python Egg. You may want to install it
+that way instead, it's easier.
 
 
 Installation
@@ -34,16 +28,24 @@ Zope instance Products directory. We recommend you call the directory
 will automatically be inserted into your Python path.
 
 However, we strongly recommend that you for Zope usage should take a look
-at products that bundle CalCore with Zope support, such as CPSSharedCalendar.
-Any such bundle should come with it's own installation instructions.
+at products that bundle CalCore with Zope support, such as CPSSharedCalendar
+or CalCMF. Any such bundle should come with it's own installation instructions.
 
-From your non-Zope Python product
----------------------------------
-If you recieved CalCore as a part of a CalCore python distribution
-(named CalCore-bundle-x.x.x.tgz) this can be installed with
-the command python setup.py install.
+For your non-Zope Python product
+--------------------------------
+The easiest way to install CalCore is to use the EasyInstall utilities
+from http://peak.telecommunity.com/DevCenter/EasyInstall .
+With these you can just type:
 
-This will install CalCore and all it's dependencies.
+  sudo easy_install calcore
+
+And CalCore and all it's dependencies will be downloaded and installed.
+If you don't want or can't use EasyInstall, you can install CalCore
+from source with
+
+   python setup.py install.
+
+You also need to download and install all the dependencies listed above.
 
 
 Running the tests
@@ -53,8 +55,7 @@ You can run CalCores tests with:
   python test.py
 
 Note that all dependencies need to be accessible on the python-path for this
-to work, including zope.testing:
-svn://svn.zope.org/repos/main/Zope3/tags/ZopeX3-3.0.0/src/zope/testing
+to work, and also zope.testing.
 
 
 Other
@@ -76,5 +77,3 @@ CalCore uses a testrunner and a recurrent event implementation from
 the Schoolbell project, which can be found here:
 
 http://www.schooltool.org
-
-
