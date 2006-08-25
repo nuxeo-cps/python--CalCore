@@ -331,7 +331,7 @@ class SearchCriteria:
         self.participation_status = participation_status
         self.participation_role = participation_role
         self.categories = categories
-        self.organizer = None
+        self.organizer = organizer
 
     def clone(self, attendees=None, participation_status=None,
               participation_role=None, categories=None, organizer=None):

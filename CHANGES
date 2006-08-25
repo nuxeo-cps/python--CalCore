@@ -6,7 +6,7 @@ New features:
 -
 Bug fixes:
 ~~~~~~~~~~
--
+- Searchcritieria ignored the organizer parameter.
 New internal features:
 ~~~~~~~~~~~~~~~~~~~~~~
 -
