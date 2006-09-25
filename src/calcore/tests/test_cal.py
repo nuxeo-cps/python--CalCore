@@ -33,7 +33,7 @@ class CalTestCase(unittest.TestCase):
             'ACCEPTED',
             meeting.getParticipationStatus(room))
         subscribers.remove(_invite_subscriber)
-        
+
     def test_getOccurrencesEndsInPeriod(self):
         martijn = self._s.createIndividual('martijn', 'Martijn')
         # an event that goes from 16 until 02 the next day
@@ -49,7 +49,7 @@ class CalTestCase(unittest.TestCase):
              datetime(2005, 4, 14, 0, 0)))
         self.assertEquals(
             1, len(occ))
-         
+
     def test_getOccurrencesStartsInPeriod(self):
         martijn = self._s.createIndividual('martijn', 'Martijn')
         # an event that goes from 16 until 02 the next day
@@ -65,7 +65,7 @@ class CalTestCase(unittest.TestCase):
              datetime(2005, 4, 11, 0, 0)))
         self.assertEquals(
             1, len(occ))
-        
+
     def test_attendeeManagement(self):
         calendar = cal.Calendar(self._m, self._s)
         martijn = self._s.createIndividual('martijn', 'Martijn')
@@ -77,7 +77,7 @@ class CalTestCase(unittest.TestCase):
         calendar.removeAttendee(martijn)
         self.failUnlessEqual(calendar.getMainAttendee().getAttendeeId(),
                              'guido')
-        
+
     def test_searchCriteria(self):
         martijn = self._s.createIndividual('martijn', 'Martijn')
         meeting = martijn.createEvent(
@@ -97,7 +97,7 @@ class CalTestCase(unittest.TestCase):
         sc = cal.SearchCriteria(attendees=(martijn, guido))
         events = self._m.getEvents((None, None), sc)
         self.failUnlessEqual(len(events), 2)
-        
+
 def test_suite():
     suite = unittest.TestSuite()
     suite.addTests([unittest.makeSuite(CalTestCase)])
