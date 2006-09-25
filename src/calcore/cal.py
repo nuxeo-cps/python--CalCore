@@ -673,10 +673,16 @@ class CalendarBase:
     def removeAttendee(self, attendee):
         del self._attendees[attendee.getAttendeeId()]
 
-    def getMainAttendee(self):
-        if len(self._attendees.keys()) == 0:
+    def getMainAttendeeId(self):
+        attendee_keys = self._attendees.keys()
+        if len(attendee_keys) == 0:
             return None
-        attendee_id = self._attendees.keys()[0]
+        return attendee_keys[0]
+
+    def getMainAttendee(self):
+        attendee_id = self.getMainAttendeeId()
+        if attendee_id is None:
+            return None
         source = self._getAttendeeSource()
         return source.getAttendee(attendee_id)
 
@@ -690,7 +696,7 @@ class CalendarBase:
         iCalendar client is assumed to have retrieved the calendar
         first, as when you are using it via WebDAV.
         """
-        self._logger.debug('import_ raw ical text: \n\n%s\n\n' % text)
+        self._logger.log(5, 'import_ raw ical text: \n\n%s\n\n', text)
         # repair text with proper line endings if necessary
         text = self._repairText(text)
         # get all events (to use when we import)
@@ -972,7 +978,7 @@ class CalendarBase:
             e = event.export()
             ical.add_component(e)
         ical_text = ical.as_string()
-        self._logger.debug('export generated ical text: \n\n%s\n\n' % ical_text)
+        self._logger.log(5, 'export generated ical text: \n\n%s\n\n', ical_text)
         return ical_text
 
 
@@ -1025,6 +1031,10 @@ class SimpleAttendeeSource:
 
     def getAttendee(self, attendee_id):
         return self._attendees[attendee_id]
+
+    def getCurrentUserAttendeeId(self):
+        # there is no concept of a current user at this level
+        return None
 
     def getCurrentUserAttendee(self):
         # there is no concept of a current user at this level

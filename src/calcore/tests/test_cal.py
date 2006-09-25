@@ -72,9 +72,11 @@ class CalTestCase(unittest.TestCase):
         guido = self._s.createIndividual('guido', 'Guido')
         calendar.addAttendee(martijn)
         calendar.addAttendee(guido)
+        self.failUnlessEqual(calendar.getMainAttendeeId(), 'martijn')
         self.failUnlessEqual(calendar.getMainAttendee().getAttendeeId(),
                              'martijn')
         calendar.removeAttendee(martijn)
+        self.failUnlessEqual(calendar.getMainAttendeeID(), 'guido')
         self.failUnlessEqual(calendar.getMainAttendee().getAttendeeId(),
                              'guido')
 

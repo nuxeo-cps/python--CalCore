@@ -244,6 +244,12 @@ class IAttendeeSource(Interface):
         """Retrieve an attendee by attendee_id.
         """
 
+    def getCurrentUserAttendeeId():
+        """Retrieve the attendee id for the current user.
+
+        If there is no current user, this returns None.
+        """
+
     def getCurrentUserAttendee():
         """Retrieve the attendee object for the current user.
 
@@ -291,6 +297,9 @@ class ICalendar(Interface):
 
         Events for this attendee will no longer be shown in the calendar.
         """
+
+    def getMainAttendeeId():
+        """Attendee id for which this calendar is the main calendar"""
 
     def getMainAttendee():
         """Returns the attendee for which this calendar is the main calendar

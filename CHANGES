@@ -9,4 +9,5 @@ Bug fixes:
 - Searchcritieria ignored the organizer parameter.
 New internal features:
 ~~~~~~~~~~~~~~~~~~~~~~
--
+- [OPTIM] added two new methods: getCurrentUserAttendeeId and getMainAttendeeId
+  to be able to access the ids without computing the whole Attendee objects
