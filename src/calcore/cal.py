@@ -517,9 +517,10 @@ class EventBase:
     def export(self, private=False):
         """Exports the event as an icalendar.Event.
 
-        Setting provate to True will hide all information except date/time
+        Setting private to True will hide all information except date/time
         information. This should be used for private events when exporting
-        is done by somebody who does not have full rights to the event"""
+        is done by somebody who does not have full rights to the event
+        """
 
         e = icalendar.Event()
         if not self.allday:
