@@ -30,7 +30,7 @@ _ = MessageFactory("calendar")
 
 class IStorageManager(Interface):
     # MANIPULATORS
-    
+
     def setStorage(storage_id):
         """Set the storage for events.
         """
@@ -57,20 +57,20 @@ class IStorageManager(Interface):
     def deleteEvent(event):
         """Delete event from storage.
         """
-        
+
     # ACCESSORS
     def getEvent(event_id):
         """Get an event.
 
         If event cannot be found, a KeyError will be raised.
-        
+
         This returns ICalendarEvents.
         """
 
     def hasEvent(event_id):
         """Returns True if event with given id exists.
         """
-        
+
     def getEvents(period, search_criteria=None):
         """Get events in a particular period. Don't expand recurrent events.
 
@@ -78,7 +78,7 @@ class IStorageManager(Interface):
 
         It is allowed to put in an open search (datetime, None) as a period.
         This will return all relevant events that exist.
-        
+
         Filter by search criteria if these are supplied.
 
         This returns ICalendarEvents. Recurrent events are not expanded.
@@ -89,7 +89,7 @@ class IStorageManager(Interface):
 
         Calendar recurrences are very simple objects that refer back to
         the original event responsible for its creation.
-        
+
         For non-recurrent events, there is only a single occurrence. An
         recurrent event can have multiple occurrrences, however.
 
@@ -110,17 +110,17 @@ class IStorageManager(Interface):
         Split up occurrences that are into multiple ones, one for
         each day.
         """
-        
+
     def getBlockedPeriods(attendees, period, time_period):
         """Get all periods blocked for people in a particular period.
 
         The list returned will be sorted. Overlapping periods will be
         merged.
-        
+
         period - a start datetime, end datetime tuple
         time_period - a start time, end time tuple
         """
-        
+
     def getFreePeriods(attendees, period, time_period,
                      minimum_duration=None):
         """Get all the free periods available for people in period.
@@ -131,7 +131,7 @@ class IStorageManager(Interface):
         minimum_duration - optional mininum duration of free slot we're
           interested in.
         """
-        
+
 class IStorage(Interface):
     """A storage contains events.
     """
@@ -147,12 +147,12 @@ class IStorage(Interface):
     def deleteEvent(event):
         """Delete event from storage.
         """
-        
+
     # ACCESSORS
     def getStorageId():
         """Return storage id (should be unique per storage manager).
         """
-        
+
     def getEvent(event_id):
         """Get an event given event_id.
 
@@ -203,7 +203,7 @@ class IAttendee(Interface):
         transparent - transparent or opaque
         access - access class (PUBLIC, PRIVATE, CONFIDENTIAL)
         """
-        
+
     # ACCESSORS
     def getAttendeeId():
         """Get unique attendee id.
@@ -218,7 +218,7 @@ class IAttendee(Interface):
         ROOM
         UNKNOWN
         """
-        
+
     def getEvents(period, search_criteria=None):
         """Get all events in period for this attendee.
 
@@ -232,7 +232,7 @@ class IAttendee(Interface):
         period - startdatetime, enddatetime tuple for period, bounded
         search_criteria - criteria to filter on.
         """
-        
+
     def getOrganizedEvents():
         """Get all events organized by this attendee.
         """
@@ -249,12 +249,12 @@ class IAttendeeSource(Interface):
 
         If there is no current user, this returns None.
         """
-        
+
     def findByName(query_str, attendee_type=None):
         """Search attendees.
         query_str - should contain part of the name
-        attendee_type - optionally filter on attendee_type        
-        Returns a list of attendee objects which match. 
+        attendee_type - optionally filter on attendee_type
+        Returns a list of attendee objects which match.
         None matches all, '' matches nothing.
         """
 
@@ -270,14 +270,14 @@ class IAttendeeSource(Interface):
 
     def getAttendeeFromSpec(vcaladdress):
         """Finds an attendee from an iCalendar vCalAddress specification.
-        
+
         iCalendar specifies the attendee with an MAILTO: uri, and paramseters
-        like CUTYPE. This method allows you to override the conversion from 
+        like CUTYPE. This method allows you to override the conversion from
         iCalendar specification to attendees.
-        
+
         Returns None when no attendee is found.
         """
-        
+
 class ICalendar(Interface):
     # MANIPULATORS
     def addAttendee(attendee):
@@ -291,15 +291,15 @@ class ICalendar(Interface):
 
         Events for this attendee will no longer be shown in the calendar.
         """
-    
+
     def getMainAttendee():
         """Returns the attendee for which this calendar is the main calendar
 
-        When adding an event for the calendar, you need to know in which 
+        When adding an event for the calendar, you need to know in which
         calendar you are creating it, so that the attendee is automatically
         invited to the event
         """
-        
+
     def import_(self, text, period=(None, None), search_criteria=None):
         """Given iCalendar text, import events.
 
@@ -320,7 +320,7 @@ class ICalendar(Interface):
     def hasEvent(event_id):
         """Return True only if event with event_id can be found.
         """
-        
+
     def getEvents(period, search_criteria):
         """Get all events.
         """
@@ -328,7 +328,7 @@ class ICalendar(Interface):
     def getOccurrences(period, search_criteria):
         """Get all occurrences of event in period. Period must be bounded.
         """
-        
+
     def getEventsInDay(date):
         """Get all events on a day, indicated by date.
         """
@@ -358,7 +358,7 @@ Unchanged = object() # marker
 class IRecurrenceRule(Interface):
     """Base interface of the recurrence rules.
 
-    Recurrence rules are stored as attributes of ICalendarEvent. 
+    Recurrence rules are stored as attributes of ICalendarEvent.
     """
     # regebro: Schoolbells recurrencerules are immutable. gintas said
     # on #schooltool that it was a legacy thing, so I changed it.
@@ -398,7 +398,7 @@ class IRecurrenceRule(Interface):
 
 class INoRecurrenceRule(IRecurrenceRule):
     """Interface for things that doens't recurr"""
-    
+
 class IBasicRecurrenceRule(IRecurrenceRule):
     """Common fields for most recurrences"""
     interval = Int(
@@ -410,7 +410,7 @@ class IBasicRecurrenceRule(IRecurrenceRule):
         For example, to indicate that an event occurs every second day,
         you would create a DailyRecurrenceRule witl interval equal to 2.
         """))
-    
+
     count = Int(
         title=_("Count"),
         required=False,
@@ -433,7 +433,7 @@ class IBasicRecurrenceRule(IRecurrenceRule):
         event repeats forever.
         """))
 
-    # The Zope3 forms don't handle this well.. It's all very strange and 
+    # The Zope3 forms don't handle this well.. It's all very strange and
     # not very reproducable.You seem to get different errors every time.
     # So, exceptions are commented out for now.
     #exceptions = List(
@@ -456,9 +456,9 @@ class IYearlyRecurrenceRule(IBasicRecurrenceRule):
 class IWeeklyRecurrenceRule(IBasicRecurrenceRule):
     """Weekly recurrence."""
 
-    # NB! Change from SchoolTool: This used to be a set if Ints, but there are 
+    # NB! Change from SchoolTool: This used to be a set if Ints, but there are
     # no widgets for that (and it makes little sense,as we then would just have
-    # a list of numbers. I had expected Sets of vocabularies to work, but it 
+    # a list of numbers. I had expected Sets of vocabularies to work, but it
     # seems not. A unique list is however for all practical uses the same as a
     # set, and it works.
     weekdays = Set(
@@ -527,7 +527,7 @@ class ITimed(Interface):
         """))
 
 class ICalendarEvent(ITimed):
-    """Calendar event 
+    """Calendar event
 
     This has the minimum amount of fields an event must have to be usable
     in the calendar, such as title and recurrence.
@@ -535,7 +535,7 @@ class ICalendarEvent(ITimed):
     API mostly taken from schoolbell, though some is split into
     an ITimed base interface.
     """
-    
+
     unique_id = TextLine(
         title=_("UID"),
         description=_("""
@@ -554,7 +554,7 @@ class ICalendarEvent(ITimed):
         title=_("Description"),
         required=False,
         description=_("""A description of the event."""))
-    
+
     recurrence = Object(
         title=_("Recurrence"),
         schema=IRecurrenceRule,
@@ -571,14 +571,14 @@ class ICalendarEvent(ITimed):
     allday = Bool(
         title=_("All Day Event"),
         required=False)
-    
+
     def export(private=False):
         """Returns an icalendar.Event() object for ical export.
-        
+
         By setting private to True, only the time and date will be exported"""
-        
+
     # we're not supporting the schoolbell event comparison semantics yet.
-    
+
 ##     def __eq__(other):
 ##         """See if self == other."""
 
@@ -598,7 +598,7 @@ class ICalendarEvent(ITimed):
 ##         """See if self >= other."""
 
     # we're not supporting hasOccurrences() yet
-    
+
 ##     def hasOccurrences():
 ##         """Does the event have any occurrences?
 
@@ -612,9 +612,9 @@ class ICalendarEvent(ITimed):
 class ICalendarOccurrence(ITimed):
     """An occurrence on a calendar. This stands in for a real event.
 
-    All real information can be found in the original event. 
+    All real information can be found in the original event.
     """
-     
+
     original = Object(
         title=_("Original"),
         schema=ICalendarEvent,
@@ -668,27 +668,27 @@ class IEventSpecification(IExtendedCalendarEvent):
     It has the structure of an IExtendedCalendar event but is only
     used internally to pass around information.
     """
-    
+
     # XXX There is also an organizer and an an attendees attribute, but I'm not
     # sure how to specify them at the moment. Organizer should be an Attendee
-    # object. Attendees is a dictionary with Attendee objects as keys, and 
+    # object. Attendees is a dictionary with Attendee objects as keys, and
     # values are a (role, status) tuple, wich must have a valid participation
-    # role and a valid participation status. Attendees defaults to {}, 
+    # role and a valid participation status. Attendees defaults to {},
     # organizer defaults to None.
     # XXX again: One possibility of cleaning this up is to include a subset
     # of IInvitableCalendarEvent, and the organizer and attendees with methods
     # instead of as parameters to __init__(). //regebro
-    
+
     def setOnObject(o):
         """Set data as attributes on event object.
         """
-        
+
     def willModify(o):
         """Checks if the event specification will modify the object.
         """
-        
+
 class IInvitableCalendarEvent(IExtendedCalendarEvent):
-    
+
     # MANIPULATORS
     def invite(attendees):
         """Invite attendees to invite.
@@ -712,19 +712,19 @@ class IInvitableCalendarEvent(IExtendedCalendarEvent):
         REQ-PARTICIPANT
         OPT-PARTICIPANT
         NON-PARTICIPANT
-        
+
         If not set, the default participation role is REQ-PARTICIPANT.
         """
-        
+
     # ACCESSORS
     def getStorageId():
         """Get storage this event is stored in.
         """
-        
+
     def getEventId():
         """Get the event id for this event (storage-unique).
         """
-        
+
     def getOrganizerId():
         """Get organizer id for event (in storage-terms)>
         """
@@ -732,20 +732,20 @@ class IInvitableCalendarEvent(IExtendedCalendarEvent):
     def inCategory(category):
         """Returns true if the event is in a certain category.
         """
-        
+
     def getAttendeeIds(participation_status=None, participation_role=None):
         """Get the list of participants this event has as attendee_ids.
 
         You must turn to the attendee source to turn these ids into attendee
         objects.
-        
+
         If participation_status or role not None, filter on that basis.
         """
 
     def hasAttendee(attendee):
         """Returns true if this attendee is associated with the event.
         """
-        
+
     def getParticipationStatus(attendee):
         """Get the participation status of this attendee in the event.
 
@@ -761,9 +761,9 @@ class IInvitableCalendarEvent(IExtendedCalendarEvent):
         CHAIR
         REQ-PARTICIPANT
         OPT-PARTICIPANT
-        NON-PARTICIPANT 
+        NON-PARTICIPANT
         """
-        
+
     def __hash__():
         """Hash value for this event.
         """
@@ -784,16 +784,16 @@ class IEventEvent(Interface):
 
 class IEventCreatedEvent(IEventEvent):
     """A calendar event has been created"""
-    
+
 class IEventModifiedEvent(IEventEvent):
     """A calendar event has been modified"""
-    
+
 class IEventDeletedEvent(IEventEvent):
     """A calendar event has been deleted"""
-    
+
 class IEventParticipationChangeEvent(IEventModifiedEvent):
     """A change in participation status for an attendee"""
-    
+
     attendee = Attribute("The attendee whose status changed.")
     old_status = Attribute("The previous status.")
     old_status = Attribute("The new status.")
