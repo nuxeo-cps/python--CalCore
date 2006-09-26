@@ -766,10 +766,9 @@ class CalendarBase:
             organizer = None
 
         if organizer is None:
-            organizer = self.getMainAttendee()
+            organizer = self._getDefaultOrganizer()
 
         kw['organizer'] = organizer
-
 
         if e.has_key('ATTENDEE'):
             attendees = []
@@ -793,6 +792,9 @@ class CalendarBase:
         else:
             kw['recurrence'] = None
         return EventSpecification(**kw)
+
+    def _getDefaultOrganizer(self):
+        return self.getMainAttendee()
 
     def _deleteEvent(self, event):
         self._getStorageManager().deleteEvent(event)
