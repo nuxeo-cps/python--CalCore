@@ -1,3 +1,24 @@
+===========================================================
+Package: CalCore 2.2.0
+===========================================================
+First release built by: ogrisel at: 2006-10-04T21:19:06
+SVN Tag: https://svn.nuxeo.org/pub/Python/CalCore/tags/2.2.0
+Build from: https://svn.nuxeo.org/pub/Python/CalCore/trunk@49317
+
+Requires:
+~~~~~~~~~
+-
+New features:
+~~~~~~~~~~~~~
+-
+Bug fixes:
+~~~~~~~~~~
+- Searchcritieria ignored the organizer parameter.
+New internal features:
+~~~~~~~~~~~~~~~~~~~~~~
+- [OPTIM] added two new methods: getCurrentUserAttendeeId and getMainAttendeeId
+  to be able to access the ids without computing the whole Attendee objects
+
 *******************************************
 ** CalCore V2.1.0 [R1 build 2006/08/03-09:22 by fermigier]
 ** SVN URL: https://svn.nuxeo.org/pub/Python/CalCore/trunk Revision: 47779
