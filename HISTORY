@@ -1,6 +1,26 @@
 ===========================================================
 Package: CalCore 2.2.1
 ===========================================================
+First release built by: lregebro at: 2006-10-31T22:13:58
+SVN Tag: https://svn.nuxeo.org/pub/Python/CalCore/tags/2.2.1
+Build from: https://svn.nuxeo.org/pub/Python/CalCore/trunk@49883
+
+Requires
+~~~~~~~~
+-
+New features
+~~~~~~~~~~~~
+-
+Bug fixes
+~~~~~~~~~
+-
+New internal features
+~~~~~~~~~~~~~~~~~~~~~
+- 
+
+===========================================================
+Package: CalCore 2.2.1
+===========================================================
 First release built by: lregebro at: 2006-10-31T22:10:49
 SVN Tag: https://svn.nuxeo.org/pub/Python/CalCore/tags/2.2.1
 Build from: https://svn.nuxeo.org/pub/Python/CalCore/trunk@49879
