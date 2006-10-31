@@ -1,21 +1,19 @@
 Packaging CalCore
 =================
-There are two ways of packaging CalCore; make_pkg and setuptools.
+There are two ways of packaging CalCore; Bundleman and setuptools.
 
-Nuxeo make_pkg
---------------
+Bundleman
+---------
+
 This is the primary packaging operation. In most cases you want to run this
-before any other type of packaging. Nuxeo make_pkg will increase the version
-number, make a tag in the svn for the new version, make CHANGES.txt, 
-HISTORY.txt and VERSION.txt files, create a tgz package and update the CHANGES,
-HISTORY and VERSION files accordingly.
+before any other type of packaging. "bm-product -- release" will increase the
+version number, make a tag in the svn for the new version, make version.txt
+and CHANGELOG.txt files and update the CHANGES, HISTORY and VERSION files
+accordingly. "bm-product --archive" will create a tgz for the archive.
 
-The result is a file, CalCore-x.x.x.tgz that includes the CalCore product.
-This can be installed either with distutils or as a Zope 2 Product, although
-the installation as a Zope product will be the only supported from versions
-after 2.0.1, as 2.0.1 and later has eggs support.
+See http://public.dev.nuxeo.com/~ben/bundleman/
 
-Usage: make_pkg
+Usage: bm-product --release; bm-product --archive
 
 
 setuptools
