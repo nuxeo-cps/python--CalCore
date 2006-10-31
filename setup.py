@@ -5,7 +5,7 @@ from setuptools import setup
 setup(name='calcore',
       package_dir={'': 'src'},
       packages=['calcore'],
-      version='2.1.0',
+      version='2.2.1',
       install_requires=['zope.interface >= 3.0',
                         'zope.schema >= 3.0',
                         'zope.i18nmessageid >= 3.0',
