@@ -76,7 +76,7 @@ class CalTestCase(unittest.TestCase):
         self.failUnlessEqual(calendar.getMainAttendee().getAttendeeId(),
                              'martijn')
         calendar.removeAttendee(martijn)
-        self.failUnlessEqual(calendar.getMainAttendeeID(), 'guido')
+        self.failUnlessEqual(calendar.getMainAttendeeId(), 'guido')
         self.failUnlessEqual(calendar.getMainAttendee().getAttendeeId(),
                              'guido')
 
