@@ -30,8 +30,8 @@ New features:
 - Calcore now sends events on event creation, deletion, status changes and
   other modifications. 
   PLEASE NOTE! Since most modifications is done directly on the events, 
-  any system that uses calcore should definitely send EvenModifiedEvents
-  whenever an event is modified! Calcore doesn't subscribe to any events
+  any system that uses calcore should definitely send EventModifiedEvents
+  whenever an event is modified! CalCore doesn't subscribe to any events
   itself, but systems that build on it, like CalZope, will.
 - The on_invite and on_status_change mechanisms has been removed. They were
   primarily used to send notifications, and this is better done with events.
