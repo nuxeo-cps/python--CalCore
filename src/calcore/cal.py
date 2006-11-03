@@ -975,7 +975,7 @@ class CalendarBase:
         """Export calendar data in ICalendar format"""
         ical = icalendar.Calendar()
         ical.add('prodid', '-//CalCore //nuxeo.com//')
-        ical.add('version', '1.0')
+        ical.add('version', '2.0')
 
         for event in self.getEvents(period, search_criteria):
             e = event.export()
