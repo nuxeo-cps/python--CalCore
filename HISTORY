@@ -1,4 +1,24 @@
 ===========================================================
+Package: CalCore 2.2.2
+===========================================================
+First release built by: lregebro at: 2006-11-17T15:45:23
+SVN Tag: https://svn.nuxeo.org/pub/Python/CalCore/tags/2.2.2
+Build from: https://svn.nuxeo.org/pub/Python/CalCore/trunk@50098
+
+Requires
+~~~~~~~~
+-
+New features
+~~~~~~~~~~~~
+-
+Bug fixes
+~~~~~~~~~
+- Corrected the iCalendar export version number.
+New internal features
+~~~~~~~~~~~~~~~~~~~~~
+- 
+
+===========================================================
 Package: CalCore 2.2.1
 ===========================================================
 First release built by: lregebro at: 2006-10-31T22:13:58
