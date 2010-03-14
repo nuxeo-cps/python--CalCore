@@ -1,4 +1,21 @@
 ===========================================================
+Package: CalCore 2.2.3
+===========================================================
+First release built by: gracinet at: 2010-03-14T16:52:55
+Requires
+~~~~~~~~
+-
+New features
+~~~~~~~~~~~~
+-
+Bug fixes
+~~~~~~~~~
+- Switch to mercurial DCVS and hgbundler release manager
+New internal features
+~~~~~~~~~~~~~~~~~~~~~
+- 
+
+===========================================================
 Package: CalCore 2.2.2
 ===========================================================
 First release built by: lregebro at: 2006-11-17T15:45:23
